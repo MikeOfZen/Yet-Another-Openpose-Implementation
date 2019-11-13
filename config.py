@@ -1,5 +1,11 @@
 
-DATASET_PATH=r"./dataset/"
+DATASET_PATH=r"./dataset"
 IMAGES_PATH=DATASET_PATH+"/train2017"
 TRAIN_ANNOTATIONS_PATH=DATASET_PATH+"/annotations/person_keypoints_train2017.json"
-TEST_ANNOTATIONS_PATH=DATASET_PATH+"/annotations/person_keypoints_val2017.json"
+VALIDATION_ANNOTATIONS_PATH=DATASET_PATH+"/annotations/person_keypoints_val2017.json"
+
+
+#will be used as output files
+TRANSFORMED_ANNOTATIONS_PATH=r"./dataset/transformed/"
+TRANSFORMED_TRAIN_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_train2017.json"
+TRANSFORMED_VALIDATION_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_val2017.json"
