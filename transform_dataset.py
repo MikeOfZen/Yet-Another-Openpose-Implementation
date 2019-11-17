@@ -8,13 +8,15 @@ import pickle
 import config as c
 import coco_helper as ch
 
-def transform_dataset(keypoint_annotations_file,transformed_annotations_file,verbose=True):
+def transform_dataset(keypoint_annotations_file,transformed_annotations_file,verbose=True,format="pickle",normalize_size=True):
     """This script transforms the COCO 201 keypoint train,val files
     into a format with all keypoints and joints for an image, in a more convinent format,
     where the first axes is the bodypart or joint, the second is the object, and the third are the
     components (x,y,a) for keypoint and (x1,y1,x2,y2,a) for joint.
-    The script saves it into matching pickle files
-
+    The script saves it into matching pickle files.
+    Meant to run once.
+    :param format should be 'pickle' or 'json'
+    :param normalize_size determines whether the pixel coords should be normalized by size to 0..1 range
     """
 
     if verbose:
@@ -44,9 +46,13 @@ def transform_dataset(keypoint_annotations_file,transformed_annotations_file,ver
         image_sizes[x['id']] = (x['width'], x["height"])
 
     #take the list form, numpyify and form to (x,17,3) tensor where x is the number of persons in image
-    def transform_keypts(keypts_list):
+    def transform_keypts(keypts_list,size):
         keypts_np=np.array(keypts_list, dtype=np.float32)
         keypts_np=keypts_np.reshape((-1,17,3)) #form the list into a correctly shaped tensor
+        #normalizing now saves this computation later for every tensor
+        #the pixel idx get normalized to 0..1 range so pixel at (100,300) on a (400,600) sized image becomes (0.25,0.5)
+        if normalize_size:
+            keypts_np[:,:,0:2]=keypts_np[:,:,0:2]/size
         return keypts_np
 
     #create a joints tensor from keypoints tensor, according to COCO joints
@@ -78,13 +84,17 @@ def transform_dataset(keypoint_annotations_file,transformed_annotations_file,ver
     for i,img_id in enumerate(sorted(img_keypts)):
         size=image_sizes[img_id]
         keypoints_list=img_keypts[img_id]
-        keypoints=transform_keypts(keypoints_list)
+        keypoints=transform_keypts(keypoints_list,size)
         tr_keypoints= keypoints.transpose((1, 0, 2))  # transpose keypoints
 
         tr_joint=create_all_joints(keypoints)
+        #convert to list to store on JSON
+        if format=="json":
+            tr_keypoints=tr_keypoints.tolist()
+            tr_joint=tr_joint.tolist()
 
         combined[img_id]=[size,tr_keypoints,tr_joint]
-        if verbose and not i%100:
+        if verbose and not i%1000:
             print(".",end="", flush=True)
 
 
@@ -92,10 +102,14 @@ def transform_dataset(keypoint_annotations_file,transformed_annotations_file,ver
     #write out to json file the transformed dataset
 
     if verbose:
-        print(f"\nWriting out JSON file to {file_path}")
+        print(f"\nWriting out {format} file to {file_path}")
 
-    with open(file_path, 'w') as fp:
-        pickle.dump(combined, fp)
+    if format=="json":
+        with open(file_path , 'w') as fp:
+            json.dump(combined, fp)
+    elif format == "pickle":
+        with open(file_path , 'wb') as fp:
+            pickle.dump(combined, fp)
 
 if __name__ == "__main__":
     transform_dataset(c.TRAIN_ANNOTATIONS_PATH,c.TRANSFORMED_TRAIN_ANNOTATIONS_PATH)
