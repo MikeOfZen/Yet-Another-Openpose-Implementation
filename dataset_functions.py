@@ -1,12 +1,36 @@
 from config import *
 import tensorflow as tf
 
+class TFrecordParser():
+    def __init__(self):
+        self.feature_description = {
+            'id': tf.io.FixedLenFeature([1], tf.int64),
+            'image_raw': tf.io.FixedLenFeature([], tf.string),
+            'size': tf.io.FixedLenFeature([2], tf.int64),
+            'kpts': tf.io.FixedLenFeature([], tf.string),
+            'joints': tf.io.FixedLenFeature([], tf.string)
+        }
+    @tf.function
+    def read_tfrecord(self,serialized_example, decode_jpg=True):
+        parsed = tf.io.parse_single_example(serialized_example, self.feature_description)
 
+        idd = parsed['id']
+        image_raw = parsed['image_raw']
+
+        if decode_jpg:
+            image_raw = tf.image.decode_jpeg(image_raw)
+
+        size = parsed['size']
+        kpts = tf.io.parse_tensor(parsed['kpts'], tf.float32)
+        joints = tf.io.parse_tensor(parsed['joints'], tf.float32)
+
+        kpts = tf.RaggedTensor.from_tensor(kpts)
+        joints = tf.RaggedTensor.from_tensor(joints)
+
+        return {"id": idd, "image_raw": image_raw, "size": size, "kpts": kpts, "joints": joints}
 
 class LabelTransformer():
     def __init__(self):
-
-
         x_grid=tf.linspace(0.0,1.0,IMAGE_WIDTH)
         y_grid=tf.linspace(0.0,1.0,IMAGE_HEIGHT)
         xx,yy=tf.meshgrid(x_grid,y_grid)

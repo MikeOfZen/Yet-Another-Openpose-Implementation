@@ -1,12 +1,14 @@
+import os
+s=os.sep
 
-DATASET_PATH=r"./dataset"
-IMAGES_PATH=DATASET_PATH+"/train2017"
-TRAIN_ANNOTATIONS_PATH=DATASET_PATH+"/annotations/person_keypoints_train2017.json"
-VALIDATION_ANNOTATIONS_PATH=DATASET_PATH+"/annotations/person_keypoints_val2017.json"
+DATASET_PATH=f".{s}dataset"
+IMAGES_PATH=DATASET_PATH+f"{s}trainval2017"
+TRAIN_ANNOTATIONS_PATH=DATASET_PATH+f"{s}annotations{s}person_keypoints_train2017.json"
+VALIDATION_ANNOTATIONS_PATH=DATASET_PATH+f"{s}annotations{s}person_keypoints_val2017.json"
 
 
 #will be used as output files
-TRANSFORMED_ANNOTATIONS_PATH=r"./dataset/transformed/"
+TRANSFORMED_ANNOTATIONS_PATH=f".{s}dataset{s}transformed{s}"
 TRANSFORMED_TRAIN_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_train2017"
 TRANSFORMED_VALIDATION_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_val2017"
 

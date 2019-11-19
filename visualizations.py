@@ -4,6 +4,7 @@ from IPython.display import Image, display
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.colors
+import tensorflow as tf
 
 def show_by_id(id):
     """use to show a single image from the databse by its id"""
