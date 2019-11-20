@@ -96,7 +96,7 @@ def COCOjson_to_pickle(keypoint_annotations_file, transformed_annotations_file, 
     def create_all_joints(all_keypts):
         def create_joints(keypts):
             joints = []
-            for kp1_idx, kp2_idx in ch.coco_joints:
+            for kp1_idx, kp2_idx in c.DATASET_JOINTS:
                 kp1 = keypts[kp1_idx]
                 kp2 = keypts[kp2_idx]
                 if kp1[2] == 0 or kp2[2] == 0:
