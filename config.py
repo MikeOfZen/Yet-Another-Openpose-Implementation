@@ -19,8 +19,10 @@ IMAGE_WIDTH=368
 IMAGE_HEIGHT=368
 IMAGE_SIZE=(IMAGE_HEIGHT,IMAGE_WIDTH)
 
-PAF_OUTPUT_FILTERS=38
-HEATMAP_FILTERS=17
+#model settings
+PAF_OUTPUT_NUM_FILTERS=38
+HEATMAP_NUM_FILTERS=17
+BATCH_NORMALIZATION_ON=False
 
 #taken directly from the annotations JSON file
 DATASET_KPTS=['nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear', 'left_shoulder', 'right_shoulder',
