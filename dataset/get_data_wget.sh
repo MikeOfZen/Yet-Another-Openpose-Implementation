@@ -1,14 +1,16 @@
 
+mkdir images
+cd images
 for V in train2017 val2017 test2017
 do
 	echo Getting $V
-	mkdir $V
-	cd $V
+
 	wget --timeout 10 http://images.cocodataset.org/zips/$V.zip
 	unzip -q $V.zip
 	rm $V.zip
-	cd ..
+	
 done
+cd ..
 
 mkdir /annotations
 cd /annotations
