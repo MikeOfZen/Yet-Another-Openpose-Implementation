@@ -77,3 +77,53 @@ def plot_skeleton_on_img(PAFs_array, img):
     plt.imshow(img)
     plt.imshow(actual_colors)
     plt.show()
+
+def show_pafs_kpts_img(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6):
+    """Draws an image, a keypoints layer, a part affinity field vector field, all three, or any combintaion thereof
+    *the PAF array shape should be somewhat smaller ~x4 than the image to not overwhelm it.
+    *doesnt work on batch
+    :param pafs must by np.ndarray of the PAFs, shape =(num_joints,h,w,2)
+    :param kpts must by np.ndarray of the kpts, shape =(num_kpts,h,w)
+    :param squeeze_kpts determines how 'squeezed' in space the kpts are, a higher number will make the kpts smaller
+    either or are optional
+    :param kpts_alpha float 0..1 range for the transperency intesity of the kpts
+    """
+    assert type(img) is np.ndarray or type(kpts) is np.ndarray or type(pafs) is np.ndarray , "Missing input or not numpy.ndarray"
+
+    plt.figure(figsize=(8,8))
+
+    kwargs={}
+    if type(pafs) is np.ndarray:
+        kwargs={"extent":(0,pafs.shape[2],pafs.shape[1],0)}
+    elif type(kpts) is np.ndarray:
+        kwargs={"extent":(0,kpts.shape[2],kpts.shape[1],0)}
+
+    if type(img) is np.ndarray:
+        plt.imshow(img,**kwargs)
+    if type(kpts) is np.ndarray:
+        draw_kpts(kpts,squeeze_kpts,kpts_alpha)
+    if type(pafs) is np.ndarray:
+        draw_pafs(pafs)
+    plt.show()
+
+def draw_pafs(pafs):
+    cmap = plt.cm.hsv
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=pafs.shape[0])
+
+    num_pafs=int(pafs.shape[-1] / 2)
+    for i in range(num_pafs):
+        # pruned_field=prune_quiver(PAF,downsample)
+        U = pafs[..., i]
+        V = pafs[..., num_pafs+i]
+        plt.quiver(U, V, scale=20, angles="xy", minlength=0.1, linewidth=0.1, color=cmap(norm(i)))
+
+def draw_kpts(kpts,squeeze=1,kpts_alpha=0.6):
+    cmap = plt.cm.viridis
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
+    spots = cmap(norm(kpts.max(axis=0)))
+
+    superimposed_kpts=kpts.max(axis=-1)
+    alpha=(superimposed_kpts)**squeeze / superimposed_kpts.max()
+    alpha=alpha*kpts_alpha
+    spots[..., 3] = alpha
+    plt.imshow(spots)

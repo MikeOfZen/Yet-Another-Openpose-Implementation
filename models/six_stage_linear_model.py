@@ -1,5 +1,5 @@
 import tensorflow as tf
-from config import IMAGE_HEIGHT,IMAGE_WIDTH,PAF_OUTPUT_NUM_FILTERS,HEATMAP_NUM_FILTERS,BATCH_NORMALIZATION_ON
+from config import IMAGE_HEIGHT,IMAGE_WIDTH,PAF_NUM_FILTERS,HEATMAP_NUM_FILTERS,BATCH_NORMALIZATION_ON
 
 
 
@@ -7,7 +7,7 @@ class ModelMaker():
     def __init__(self):
         self.image_height=IMAGE_HEIGHT
         self.image_width=IMAGE_WIDTH
-        self.paf_output_num_filters=PAF_OUTPUT_NUM_FILTERS
+        self.paf_output_num_filters=PAF_NUM_FILTERS
         self.heatmap_num_filters=HEATMAP_NUM_FILTERS
         
         self.conv_block_nfilters = 96
@@ -50,8 +50,8 @@ class ModelMaker():
 
         x = tf.keras.layers.Conv2D(self.stage_final_nfilters, 1, padding="same", activation='relu', name=name + "_final1conv")(x)
         if self.batch_normalization_on: x = tf.keras.layers.BatchNormalization(name=name + "_finalbn1")(x)
-        x = tf.keras.layers.Conv2D(outputs, 1, padding="same", activation='relu', name=name + "_outputconv")(x)
-        if self.batch_normalization_on: x = tf.keras.layers.BatchNormalization(name=name + "_finalbn2")(x)
+        x = tf.keras.layers.Conv2D(outputs, 1, padding="same", activation='relu', name=name + "_output")(x)
+        if self.batch_normalization_on: x = tf.keras.layers.BatchNormalization(name=name + "_outputbn")(x)
         return x
 
     def create_models(self):
@@ -76,16 +76,10 @@ class ModelMaker():
         stage6_output = self._make_stageI([stage5_output, stage4_output, stage1_input], "stage6heatmap", 128, self.heatmap_num_filters)
 
         training_outputs = [stage1_output, stage2_output, stage3_output, stage4_output, stage5_output, stage6_output]
-        self.train_model = tf.keras.Model(inputs=input_tensor, outputs=training_outputs)
-        self.training_output_types = ["PAF", "PAF", "PAF", "PAF", "HEATMAP", "HEATMAP"]
+        train_model = tf.keras.Model(inputs=input_tensor, outputs=training_outputs)
 
         test_outputs = [stage4_output, stage6_output]
-        self.test_model = tf.keras.Model(inputs=input_tensor, outputs=test_outputs)
-        self.test_output_types = ["PAF", "HEATMAP"]
+        test_model = tf.keras.Model(inputs=input_tensor, outputs=test_outputs)
 
-    def get_train_model(self):
-        return self.train_model
-
-    def get_test_model(self):
-        return self.test_model
+        return train_model,test_model
 
