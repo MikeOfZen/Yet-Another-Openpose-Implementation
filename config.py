@@ -3,14 +3,14 @@ s=os.sep
 
 #Definitions for COCO 2017 dataset
 
-DATASET_PATH=f".{s}dataset"
-IMAGES_PATH=DATASET_PATH+f"{s}images"
-TRAIN_ANNOTATIONS_PATH=DATASET_PATH+f"{s}annotations{s}person_keypoints_train2017.json"
-VALIDATION_ANNOTATIONS_PATH=DATASET_PATH+f"{s}annotations{s}person_keypoints_val2017.json"
+DATASET_PATH="."+s+"dataset"
+IMAGES_PATH=DATASET_PATH+s+"images"
+TRAIN_ANNOTATIONS_PATH=DATASET_PATH+s+"annotations"+s+"person_keypoints_train2017.json"
+VALIDATION_ANNOTATIONS_PATH=DATASET_PATH+s+"annotations"+s+"person_keypoints_val2017.json"
 
 
 #will be used as output files
-TRANSFORMED_ANNOTATIONS_PATH=f".{s}dataset{s}transformed{s}"
+TRANSFORMED_ANNOTATIONS_PATH="."+s+"dataset"+s+"transformed"+s+""
 TRANSFORMED_TRAIN_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_train2017"
 TRANSFORMED_VALIDATION_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_val2017"
 

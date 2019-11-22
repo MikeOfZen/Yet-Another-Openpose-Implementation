@@ -59,14 +59,14 @@ def COCOjson_to_pickle(keypoint_annotations_file, transformed_annotations_file, 
     :param normalize_size determines whether the pixel coords should be normalized by size to 0..1 range
     """
 
-    print(f"Reading {keypoint_annotations_file}")
+    print("Reading "+keypoint_annotations_file)
 
     with open(keypoint_annotations_file, 'r') as f:
         json_file = json.load(f)
     json_tree = objectpath.Tree(json_file)
     del json_file
 
-    print(f"Getting all images keypoints")
+    print("Getting all images keypoints")
 
     #collect id and keypoints, since the annotatios file contains two types of annotatios
     # which look the same but serve different purpose, filter by "num_keypoints is not 0"
@@ -75,7 +75,7 @@ def COCOjson_to_pickle(keypoint_annotations_file, transformed_annotations_file, 
     for x in json_tree.execute("$.annotations[@.num_keypoints is not 0]"):
         img_keypts[x['image_id']].append(x['keypoints'])
 
-    print(f"Found {len(img_keypts)} images")
+    print("Found %d images" % len(img_keypts))
 
     #for every image get it's size
     image_sizes = {}
@@ -114,7 +114,7 @@ def COCOjson_to_pickle(keypoint_annotations_file, transformed_annotations_file, 
         return np.array(all_joints, dtype=np.float32).transpose((1, 0, 2))
 
 
-    print(f"Writing combined dataset")
+    print("Writing combined dataset")
 
     #create a combined dict of size,transposed keypoints and transposed joints
     combined=collections.OrderedDict()
@@ -126,9 +126,10 @@ def COCOjson_to_pickle(keypoint_annotations_file, transformed_annotations_file, 
                 print("|", end="")
             except NameError:
                 pass
-            filename = transformed_annotations_file+f"-{int(i / records_per_file)+1:03}.tfrecords"
+            file_num=int(i / records_per_file)+1
+            filename = transformed_annotations_file+"-{:03}.tfrecords".format(file_num)
             writer = tf.io.TFRecordWriter(filename)
-            print(f"\nWriting file:{filename}",flush=True)
+            print("\nWriting file:"+filename,flush=True)
         if not i % 100: print(".", end="",flush=True)
 
         size=image_sizes[img_id]
@@ -142,7 +143,7 @@ def COCOjson_to_pickle(keypoint_annotations_file, transformed_annotations_file, 
             # with open(ch.id_to_filename(img_id),'rb') as f:
             #     image_raw = f.read()
         except:
-            print(f"Couldnt read file {ch.id_to_filename(img_id)}")
+            print("Couldnt read file %s" % ch.id_to_filename(img_id))
             i-=1
             continue
 
