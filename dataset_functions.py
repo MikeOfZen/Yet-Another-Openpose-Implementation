@@ -12,6 +12,7 @@ class TFrecordParser():
         }
     @tf.function
     def read_tfrecord(self,serialized_example):
+        """Transforms a single data element from the raw TFrecord storage format to a dict of tensors"""
         parsed = tf.io.parse_single_example(serialized_example, self.feature_description)
 
         idd = parsed['id']
