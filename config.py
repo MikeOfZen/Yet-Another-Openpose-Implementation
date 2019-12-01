@@ -1,18 +1,25 @@
 import os
+import numpy as np
 s=os.sep
 
-#Definitions for COCO 2017 dataset
+#Training Mode
+TPU_MODE=False
 
+
+#Definitions for COCO 2017 dataset
 DATASET_PATH="."+s+"dataset"
 IMAGES_PATH=DATASET_PATH+s+"images"
 TRAIN_ANNOTATIONS_PATH=DATASET_PATH+s+"annotations"+s+"person_keypoints_train2017.json"
 VALIDATION_ANNOTATIONS_PATH=DATASET_PATH+s+"annotations"+s+"person_keypoints_val2017.json"
 
-
 #will be used as output files
 TRANSFORMED_ANNOTATIONS_PATH="."+s+"dataset"+s+"transformed"+s+""
 TRANSFORMED_TRAIN_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_train2017"
 TRANSFORMED_VALIDATION_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_val2017"
+
+#Dataset reference values
+DATASET_SIZE=56000 #exact size not critical
+DATASET_VAL_SIZE=2500
 
 #this determines the size images will be resized to, and the size of the labels vreated
 IMAGE_WIDTH=368
@@ -34,9 +41,43 @@ DATASET_KPTS=['nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear', 'left_sh
 DATASET_JOINTS=[[15, 13], [13, 11], [16, 14], [14, 12], [11, 12], [5, 11], [6, 12], [5, 6], [5, 7], [6, 8], [7, 9], [8, 10],
                 [ 1, 2], [ 0, 1], [ 0, 2], [ 1, 3], [ 2, 4], [ 3, 5], [ 4, 6]]
 
-
-
 #this is the gaussian spot sie that will be drawn on the training labels
 GAUSSIAN_SPOT_SIGMA_SQ=0.02 #used for the size of the gaussian spot for each keypoint
 JOINT_WIDTH=0.02  #used for the width of the vector field generated for each joint as a PAF, the unit is relative to image size ie 0..1
                     #for lower resolution, a value too low (~0.005) here will make the vectors too sparse
+
+
+#dataset settings
+SHUFFLE=True
+PREFETCH=10  #size of prefetch size, 0 to disable
+CACHE=True
+
+BATCH_SIZE=2  #for use when on cpu for development, if on GPU, can safely increase
+if TPU_MODE:
+    BATCH_SIZE=128  #for the size of the dataset this is optimizied for tpuv2-8 node. lower this if getting OOM or tpu crashes
+
+STEPS_PER_EPOCH=int(DATASET_SIZE/BATCH_SIZE)
+
+#Training settings
+TRAINING_EPOCHS=100
+
+#adam_learning_rate=0.001  #for reference
+BASE_LEARNING_RATE=0.001
+LEARNING_RATE_SCHEDUELE=np.zeros(1000)
+LEARNING_RATE_SCHEDUELE[:3]=0.2
+LEARNING_RATE_SCHEDUELE[3:20]=3
+LEARNING_RATE_SCHEDUELE[20:40]=2
+LEARNING_RATE_SCHEDUELE[40:60]=1
+LEARNING_RATE_SCHEDUELE[60:]=0.1
+LEARNING_RATE_SCHEDUELE*=BASE_LEARNING_RATE
+
+
+
+TENSORBOARD_PATH="./tmp/tensorboard/" #this will get overriden by tpu_config is used
+CHECKPOINTS_PATH="./tmp/checkpoints/" #this will get overriden by tpu_config is used
+MODELS_PATH="./tmp/models/"
+
+
+
+if TPU_MODE:
+    from tpu_training.config_tpu import *
