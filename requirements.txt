@@ -3,3 +3,4 @@ IPython
 numpy
 matplotlib
 tensorflow
+google-cloud-storage
