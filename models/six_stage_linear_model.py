@@ -2,46 +2,50 @@ import tensorflow as tf
 from config import IMAGE_HEIGHT,IMAGE_WIDTH,PAF_NUM_FILTERS,HEATMAP_NUM_FILTERS,BATCH_NORMALIZATION_ON
 
 
+    
 
 class ModelMaker():
     """Creates a model for the OpenPose project, structre is 10 layers of VGG16 followed by a few convultions, and 6 stages 
     of (PAF,PAF,PAF,PAF,kpts,kpts)"""
     
     def __init__(self):
-        self.image_height=IMAGE_HEIGHT
-        self.image_width=IMAGE_WIDTH
+        #self.image_height=IMAGE_HEIGHT
+        #self.image_width=IMAGE_WIDTH
+        self.input_shape=(IMAGE_HEIGHT,IMAGE_WIDTH,3)
         self.paf_output_num_filters=PAF_NUM_FILTERS
         self.heatmap_num_filters=HEATMAP_NUM_FILTERS
         
         self.conv_block_nfilters = 96
         self.stage_final_nfilters = 256
         self.batch_normalization_on = BATCH_NORMALIZATION_ON
-
-    def _make_vgg_input_model(self,input_tensor,input_shape):             
-     
-        vgg_input_model = tf.keras.applications.VGG16(weights='imagenet', include_top=False, input_shape=input_shape)
-
+        
+        self.get_vgg_layer_config_weights()
+        
         tf.keras.backend.clear_session() #to clean to backaend from the imported model
         
-        x=input_tensor
-
+    def get_vgg_layer_config_weights(self):
+        vgg_input_model = tf.keras.applications.VGG16(weights='imagenet', include_top=False, input_shape=self.input_shape)
         name_last_layer = "block3_pool"
-        for layer in vgg_input_model.layers[1:]:          
-            config=layer.get_config()
-            weights=layer.get_weights()
-            #print(config)
-            copy_layer=type(layer).from_config(config)  #the only way to make .from_config work
-            
-            x=copy_layer(x) #required for the proper sizing of the layer, set_weights will not work without it
-            copy_layer.set_weights(weights)
-            
+        
+        self.vgg_layers=[]
+        
+        for layer in vgg_input_model.layers[1:]:
+            layer_info={
+                "config":layer.get_config()            
+                ,"weights":layer.get_weights()  
+                ,"type":type(layer)
+            }
+            self.vgg_layers.append(layer_info)
             if layer.name == name_last_layer:
-                break
-                
+                break               
         del vgg_input_model
         
+    def _make_vgg_input_model(self,x):           
+        for layer_info in self.vgg_layers:               
+            copy_layer=layer_info["type"].from_config(layer_info["config"])  #the only way to make .from_config work            
+            x=copy_layer(x) #required for the proper sizing of the layer, set_weights will not work without it
+            copy_layer.set_weights(layer_info["weights"])                      
         return x
-        #input_model=tf.keras.Model(inputs=input_layer,outputs=x)
 
     def _make_stage0(self, x):
         x = tf.keras.layers.Conv2D(512, 1, padding="same", activation='relu', name="stage0_final_conv1")(x)
@@ -78,13 +82,10 @@ class ModelMaker():
         if self.batch_normalization_on: x = tf.keras.layers.BatchNormalization(name=name + "_outputbn")(x)
         return x
 
-    def create_models(self):
-        tf.keras.backend.clear_session() #to clear previoius graphs
-        
-        input_shape = (self.image_height, self.image_width, 3)
-        input_tensor = tf.keras.layers.Input(shape=input_shape) #first layer of the model
+    def create_models(self):        
+        input_tensor = tf.keras.layers.Input(shape=self.input_shape) #first layer of the model
         #stage 00 (i know)
-        stage00_output=self._make_vgg_input_model(input_tensor,input_shape)       
+        stage00_output=self._make_vgg_input_model(input_tensor)       
         #stage 0 2conv)
         stage0_output = self._make_stage0(stage00_output)
         # PAF stages
