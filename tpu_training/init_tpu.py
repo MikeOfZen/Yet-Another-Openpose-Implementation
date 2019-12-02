@@ -12,10 +12,10 @@ def init_tpu():
     "2.tpu must be turned on\n"
     "3.version must be 'nightly-2.x'\n"
     "4.tpu must be reachable (check with gce netowrking/connectivity test)\n"
-    "if not this will hang!\n"))
+    "if not this will hang!\n"),flush=True)
 
     tpu_address = 'grpc://' + TPU_IP + ':8470'
-    print("Trying to connect to:",tpu_address)
+    print("Trying to connect to:",tpu_address,flush=True)
     resolver=connect_to_tpu(tpu_address)
 
     tf.config.experimental_connect_to_cluster(resolver)

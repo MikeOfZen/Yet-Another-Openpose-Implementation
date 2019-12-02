@@ -1,6 +1,9 @@
 import tensorflow as tf
+import os
+
 import dataset_functions
 from config import *
+
 
 if TPU_MODE:
     from google.cloud import storage
