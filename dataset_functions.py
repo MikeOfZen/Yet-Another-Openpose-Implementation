@@ -1,4 +1,4 @@
-from config import LABEL_WIDTH,LABEL_HEIGHT,GAUSSIAN_SPOT_SIGMA_SQ,JOINT_WIDTH,PAF_NUM_FILTERS,HEATMAP_NUM_FILTERS
+from config import *
 import tensorflow as tf
 
 class TFrecordParser():
@@ -166,3 +166,32 @@ class LabelTransformer():
             limit_brdcst = tf.stack((limit, limit), axis=-1)  # this is for broadcasting to the 2 tuple
 
             return tf.where(limit_brdcst, vector_hat, tf.constant((0.0, 0.0)))
+
+
+_label_transformer = LabelTransformer()
+@tf.function
+def make_label_tensors(elem):
+    """Transforms a dict data element:
+    1.Read jpg to tensor
+    1.1 Resize img to correct size for network
+    2.Convert keypoints to correct form label tensor
+    3.Convert joints to correct form label tensor
+    outputs a tuple data element"""
+
+    idd = elem['id']
+    kpt_tr = _label_transformer.keypoints_spots_vmapfn(elem['kpts'])
+    paf_tr = _label_transformer.joints_PAFs(elem['joints'])
+
+    image_raw = elem["image_raw"]
+    image = tf.image.decode_jpeg(image_raw, channels=3)
+    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+    image = tf.image.resize(image, IMAGE_SIZE)
+    return image, (paf_tr, kpt_tr), idd
+
+@tf.function
+def place_training_labels(image,labels,idd):
+    """Disterbutes labels into the correct configuration for the model, ie 4 PAF stage, 2 kpt stages
+    must match the model"""
+    paf_tr=labels[0]
+    kpt_tr=labels[1]
+    return image,(paf_tr,paf_tr,paf_tr,paf_tr,kpt_tr,kpt_tr) #this should match the model outputs, and is different for each model

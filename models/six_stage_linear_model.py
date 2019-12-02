@@ -21,7 +21,7 @@ class ModelMaker():
         
         self.get_vgg_layer_config_weights()
         
-        tf.keras.backend.clear_session() #to clean to backaend from the imported model
+
         
     def get_vgg_layer_config_weights(self):
         vgg_input_model = tf.keras.applications.VGG16(weights='imagenet', include_top=False, input_shape=self.input_shape)

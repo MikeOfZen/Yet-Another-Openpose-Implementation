@@ -49,7 +49,7 @@ def encode_example(idd, image_raw, size, kpts, joints):
 #     return pickle.dumps(features) #serialized
 
 
-def COCOjson_to_pickle(keypoint_annotations_file, transformed_annotations_file, normalize_size=True,records_per_file=1000):
+def COCOjson_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, normalize_size=True, records_per_file=1000):
     """This script transforms the COCO 201 keypoint train,val files
     into a format with all keypoints and joints for an image, in a more convinent format,
     where the first axes is the bodypart or joint, the second is the object, and the third are the
@@ -155,5 +155,5 @@ def COCOjson_to_pickle(keypoint_annotations_file, transformed_annotations_file, 
 
 
 if __name__ == "__main__":
-    COCOjson_to_pickle(c.TRAIN_ANNOTATIONS_PATH, c.TRANSFORMED_TRAIN_ANNOTATIONS_PATH)
-    COCOjson_to_pickle(c.VALIDATION_ANNOTATIONS_PATH, c.TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
+    COCOjson_to_TFrecords(c.TRAIN_ANNOTATIONS_PATH, c.TRANSFORMED_TRAIN_ANNOTATIONS_PATH)
+    COCOjson_to_TFrecords(c.VALIDATION_ANNOTATIONS_PATH, c.TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
