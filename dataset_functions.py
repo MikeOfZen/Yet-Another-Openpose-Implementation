@@ -132,16 +132,17 @@ class LabelTransformer():
         """ Makes a combined PAF for all joints of the same type
         and reduces them to a single array by averaging the vectors out
         *does not support batched input
-        :param joints must be a tf.Tensor of shape (n,5)"""
+        :param joints must be a tf.Tensor of shape (n,5)
+        :return a tensor of shape (LABEL_HEIGHT, LABEL_WIDTH, 2)"""
         layer_PAFS = tf.map_fn(self.single_PAF, joints)
-        return tf.math.reduce_mean(layer_PAFS,
-                                   axis=0)  # averages the vectors out to combine the fields in case they intersect
-
+        combined=tf.math.reduce_sum(layer_PAFS,axis=0)  # averages the vectors out to combine the fields in case they intersect
+        return combined
 
     @tf.function
     def single_PAF(self, joint):
         """ Makes a single vector valued PAF (part affinity field) array
         *does not support batched input
+        :return a tensor of shape (LABEL_HEIGHT, LABEL_WIDTH, 2)
         """
 
         jpts = tf.reshape(joint[0:4], (2, 2))  # reshape to ((x1,y1),(x2,y2))
