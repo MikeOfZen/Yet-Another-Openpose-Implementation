@@ -1,0 +1,6 @@
+/tmp/checkpoints/*
+/tmp/models/*
+/tmp/tensorboard/*
+/dataset/images/*
+/dataset/transformed/*
+/dataset/annotations/*

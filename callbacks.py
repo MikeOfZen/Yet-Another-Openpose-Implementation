@@ -1,5 +1,5 @@
 import datetime
-from os import sep
+from os import sep,mkdir
 
 import tensorflow as tf
 
@@ -8,11 +8,13 @@ from config import LEARNING_RATE_SCHEDUELE,TENSORBOARD_PATH,CHECKPOINTS_PATH
 now=datetime.datetime.now().strftime("%d%a%m%y-%H%M")
 
 checkpoints_path = CHECKPOINTS_PATH+sep+now+sep+"Checkpoint-E{epoch:04d}.ckpt"
+mkdir(CHECKPOINTS_PATH+sep+now)
 checkpoints_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoints_path,
                                              save_weights_only=True,
                                              verbose=1)
 
 tensorboard_path=TENSORBOARD_PATH+sep+now
+mkdir(tensorboard_path)
 tensorboard_callback=tf.keras.callbacks.TensorBoard(
     log_dir=tensorboard_path
     #,update_freq=5000 #to update sooner than every epoch

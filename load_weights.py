@@ -23,14 +23,15 @@ def checkpoints_prompt():
     print("Found these checkpoints")
     print("0.Dont load checkpoint")
     for i, checkpoint in enumerate(checkpoints):
-        print(i + 1, "." + checkpoint)
+        print(i + 1, "." + checkpoint,flush=True)
     options = [str(x) for x in range(len(checkpoints) + 1)]
     selection = ""
     while selection not in options:
         selection = input("Please select checkpoint, or 0 to continue without loading")
     selection = int(selection)
     checkpoint = checkpoints[selection - 1] if selection else None
-    return checkpoint,get_epoch_from_name(checkpoint)
+    epoch= get_epoch_from_name(checkpoint) if selection else 0
+    return checkpoint,epoch
 
 def get_epoch_from_name(checkpoint_name):
     epoch_str=checkpoint_name[-9:-5]

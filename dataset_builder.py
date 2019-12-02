@@ -30,7 +30,7 @@ else:
     import glob
     def get_tfrecord_filenames():
         print("Retrieving TFrecords in local mode")
-        tfrecord_files_train = glob.glob(TRANSFORMED_VALIDATION_ANNOTATIONS_PATH + "-*.tfrecords")
+        tfrecord_files_train = glob.glob(TRANSFORMED_TRAIN_ANNOTATIONS_PATH + "-*.tfrecords")
         tfrecord_files_train.sort()
         tfrecord_files_val = glob.glob(TRANSFORMED_VALIDATION_ANNOTATIONS_PATH+ "-*.tfrecords")
         tfrecord_files_val.sort()

@@ -1,19 +1,19 @@
-import os
+from os import sep
 import numpy as np
-s=os.sep
+
 
 #Training Mode
 TPU_MODE=False
 
 
 #Definitions for COCO 2017 dataset
-DATASET_PATH="."+s+"dataset"
-IMAGES_PATH=DATASET_PATH+s+"images"
-TRAIN_ANNOTATIONS_PATH=DATASET_PATH+s+"annotations"+s+"person_keypoints_train2017.json"
-VALIDATION_ANNOTATIONS_PATH=DATASET_PATH+s+"annotations"+s+"person_keypoints_val2017.json"
+DATASET_PATH="." + sep + "dataset"
+IMAGES_PATH= DATASET_PATH + sep + "images"
+TRAIN_ANNOTATIONS_PATH= DATASET_PATH + sep + "annotations" + sep + "person_keypoints_train2017.json"
+VALIDATION_ANNOTATIONS_PATH= DATASET_PATH + sep + "annotations" + sep + "person_keypoints_val2017.json"
 
 #will be used as output files
-TRANSFORMED_ANNOTATIONS_PATH="."+s+"dataset"+s+"transformed"+s+""
+TRANSFORMED_ANNOTATIONS_PATH="." + sep + "dataset" + sep + "transformed" + sep + ""
 TRANSFORMED_TRAIN_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_train2017"
 TRANSFORMED_VALIDATION_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_val2017"
 
@@ -50,7 +50,7 @@ JOINT_WIDTH=0.02  #used for the width of the vector field generated for each joi
 #dataset settings
 SHUFFLE=True
 PREFETCH=10  #size of prefetch size, 0 to disable
-CACHE=True
+CACHE=False #depends on available memory size, around 20gb required for both cache and graph
 
 BATCH_SIZE=2  #for use when on cpu for development, if on GPU, can safely increase
 if TPU_MODE:
@@ -73,9 +73,9 @@ LEARNING_RATE_SCHEDUELE*=BASE_LEARNING_RATE
 
 
 
-TENSORBOARD_PATH="./tmp/tensorboard/" #this will get overriden by tpu_config is used
-CHECKPOINTS_PATH="./tmp/checkpoints/" #this will get overriden by tpu_config is used
-MODELS_PATH="./tmp/models/"
+TENSORBOARD_PATH="." + sep + "tmp" + sep + "tensorboard" + sep + "" #this will get overriden by tpu_config is used
+CHECKPOINTS_PATH="." + sep + "tmp" + sep + "checkpoints" + sep + "" #this will get overriden by tpu_config is used
+MODELS_PATH="." + sep + "tmp" + sep + "models" + sep + ""
 
 
 
