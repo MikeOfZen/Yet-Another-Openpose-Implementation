@@ -82,13 +82,17 @@ def show_pafs_kpts_img(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6):
     """Draws an image, a keypoints layer, a part affinity field vector field, all three, or any combintaion thereof
     *the PAF array shape should be somewhat smaller ~x4 than the image to not overwhelm it.
     *doesnt work on batch
-    :param pafs must by np.ndarray of the PAFs, shape =(num_joints,h,w,2)
-    :param kpts must by np.ndarray of the kpts, shape =(num_kpts,h,w)
+    :param pafs must by np.ndarray of the PAFs, shape =(1,h,w,num_joints*2) or (h,w,num_joints*2)
+    :param kpts must by np.ndarray of the kpts, shape =(1,h,w,num_kpts) or (h,w,num_kpts)
     :param squeeze_kpts determines how 'squeezed' in space the kpts are, a higher number will make the kpts smaller
     either or are optional
     :param kpts_alpha float 0..1 range for the transperency intesity of the kpts
     """
     assert type(img) is np.ndarray or type(kpts) is np.ndarray or type(pafs) is np.ndarray , "Missing input or not numpy.ndarray"
+
+    pafs=np.squeeze(pafs) #from batch to single
+    kpts = np.squeeze(kpts)  # from batch to single
+    img = np.squeeze(img)
 
     plt.figure(figsize=(8,8))
 
@@ -120,7 +124,7 @@ def draw_pafs(pafs):
 def draw_kpts(kpts,squeeze=1,kpts_alpha=0.6):
     cmap = plt.cm.viridis
     norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
-    spots = cmap(norm(kpts.max(axis=0)))
+    spots = cmap(norm(kpts.max(axis=-1)))
 
     superimposed_kpts=kpts.max(axis=-1)
     alpha=(superimposed_kpts)**squeeze / superimposed_kpts.max()
