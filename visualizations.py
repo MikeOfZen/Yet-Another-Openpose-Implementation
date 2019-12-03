@@ -98,18 +98,18 @@ def show_pafs_kpts_img(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6):
 
     kwargs={}
     if type(pafs) is np.ndarray:
+        pafs = np.squeeze(pafs)  # from batch to single
         kwargs={"extent":(0,pafs.shape[1],pafs.shape[0],0)}
     elif type(kpts) is np.ndarray:
+        kpts = np.squeeze(kpts)  # from batch to single
         kwargs={"extent":(0,kpts.shape[1],kpts.shape[0],0)}
 
     if type(img) is np.ndarray:
         img = np.squeeze(img)
         plt.imshow(img,**kwargs)
     if type(kpts) is np.ndarray:
-        kpts = np.squeeze(kpts)  # from batch to single
         draw_kpts(kpts,squeeze_kpts,kpts_alpha)
     if type(pafs) is np.ndarray:
-        pafs = np.squeeze(pafs) #from batch to single
         draw_pafs(pafs)
     plt.show()
 
