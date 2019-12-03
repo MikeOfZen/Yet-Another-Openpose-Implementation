@@ -98,9 +98,9 @@ def show_pafs_kpts_img(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6):
 
     kwargs={}
     if type(pafs) is np.ndarray:
-        kwargs={"extent":(0,pafs.shape[2],pafs.shape[1],0)}
+        kwargs={"extent":(0,pafs.shape[1],pafs.shape[0],0)}
     elif type(kpts) is np.ndarray:
-        kwargs={"extent":(0,kpts.shape[2],kpts.shape[1],0)}
+        kwargs={"extent":(0,kpts.shape[1],kpts.shape[0],0)}
 
     if type(img) is np.ndarray:
         plt.imshow(img,**kwargs)
@@ -122,11 +122,11 @@ def draw_pafs(pafs):
         plt.quiver(U, V, scale=20, angles="xy", minlength=0.1, linewidth=0.1, color=cmap(norm(i)))
 
 def draw_kpts(kpts,squeeze=1,kpts_alpha=0.6):
+    superimposed_kpts=kpts.max(axis=-1)
     cmap = plt.cm.viridis
     norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
-    spots = cmap(norm(kpts.max(axis=-1)))
+    spots = cmap(norm(superimposed_kpts))
 
-    superimposed_kpts=kpts.max(axis=-1)
     alpha=(superimposed_kpts)**squeeze / superimposed_kpts.max()
     alpha=alpha*kpts_alpha
     spots[..., 3] = alpha

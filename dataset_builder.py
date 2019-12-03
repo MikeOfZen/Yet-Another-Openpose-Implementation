@@ -8,10 +8,10 @@ from config import *
 if TPU_MODE:
     from google.cloud import storage
     from tpu_training.config_tpu import *
-    print("Retrieving TFrecords in TPU_mode")
 
     gs_prefix = "gs://"
     def get_tfrecord_filenames():
+        print("Retrieving TFrecords in TPU_mode")
         train_prefix = TRANSFORMED_TRAIN_ANNOTATIONS_PATH.split(os.sep)[-1]
         val_prefix = TRANSFORMED_VALIDATION_ANNOTATIONS_PATH.split(os.sep)[-1]
 
