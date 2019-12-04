@@ -8,7 +8,9 @@ class TFrecordParser():
             'image_raw': tf.io.FixedLenFeature([], tf.string),
             'size': tf.io.FixedLenFeature([2], tf.int64),
             'kpts': tf.io.FixedLenFeature([], tf.string),
-            'joints': tf.io.FixedLenFeature([], tf.string)
+            'joints': tf.io.FixedLenFeature([], tf.string),
+            'mask': tf.io.FixedLenFeature([], tf.string)
+
         }
     @tf.function
     def read_tfrecord(self,serialized_example):
@@ -21,11 +23,12 @@ class TFrecordParser():
 
         kpts = tf.io.parse_tensor(parsed['kpts'], tf.float32)
         joints = tf.io.parse_tensor(parsed['joints'], tf.float32)
+        mask = tf.io.parse_tensor(parsed['mask'], tf.bool)
 
         kpts = tf.RaggedTensor.from_tensor(kpts)
         joints = tf.RaggedTensor.from_tensor(joints)
 
-        return {"id": idd, "image_raw": image_raw, "size": size, "kpts": kpts, "joints": joints}
+        return {"id": idd, "image_raw": image_raw, "size": size, "kpts": kpts, "joints": joints,"mask":mask}
 
 class LabelTransformer():
     def __init__(self):
@@ -176,6 +179,7 @@ def make_label_tensors(elem):
     1.1 Resize img to correct size for network
     2.Convert keypoints to correct form label tensor
     3.Convert joints to correct form label tensor
+    4.expands mask dim and ensures mask's shape
     outputs a tuple data element"""
 
     idd = elem['id']
@@ -186,12 +190,27 @@ def make_label_tensors(elem):
     image = tf.image.decode_jpeg(image_raw, channels=3)
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
     image = tf.image.resize(image, IMAGE_SIZE)
-    return image, (paf_tr, kpt_tr), idd
+
+    mask=elem['mask']
+    mask = tf.ensure_shape(mask, ([LABEL_HEIGHT, LABEL_WIDTH]))
+    mask=tf.expand_dims(mask,axis=-1) #required
+
+    new_elem={}
+    #new_elem.update(elem)
+    new_elem["id"]= idd
+    new_elem["paf"] = paf_tr
+    new_elem["kpts"] = kpt_tr
+    new_elem["image"] = image
+    new_elem["mask"]=mask
+
+    return new_elem
 
 @tf.function
-def place_training_labels(image,labels,idd):
-    """Disterbutes labels into the correct configuration for the model, ie 4 PAF stage, 2 kpt stages
+def place_training_labels(elem):
+    """Distributes labels into the correct configuration for the model, ie 4 PAF stage, 2 kpt stages
     must match the model"""
-    paf_tr=labels[0]
-    kpt_tr=labels[1]
-    return image,(paf_tr,paf_tr,paf_tr,paf_tr,kpt_tr,kpt_tr) #this should match the model outputs, and is different for each model
+    paf_tr=elem['paf']
+    kpt_tr=elem['kpts']
+    image=elem['image']
+    mask=elem["mask"]
+    return (image,mask),(paf_tr,paf_tr,paf_tr,paf_tr,kpt_tr,kpt_tr) #this should match the model outputs, and is different for each model

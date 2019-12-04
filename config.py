@@ -13,9 +13,9 @@ TRAIN_ANNOTATIONS_PATH= DATASET_PATH + sep + "annotations" + sep + "person_keypo
 VALIDATION_ANNOTATIONS_PATH= DATASET_PATH + sep + "annotations" + sep + "person_keypoints_val2017.json"
 
 #will be used as output files
-TRANSFORMED_ANNOTATIONS_PATH="." + sep + "dataset" + sep + "transformed" + sep + ""
-TRANSFORMED_TRAIN_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_train2017"
-TRANSFORMED_VALIDATION_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"person_keypoints_val2017"
+TRANSFORMED_ANNOTATIONS_PATH="." + sep + "dataset" + sep + "TFrecords" + sep + ""
+TRANSFORMED_TRAIN_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"training"
+TRANSFORMED_VALIDATION_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"validation"
 
 #Dataset reference values
 DATASET_SIZE=56000 #exact size not critical
@@ -32,6 +32,7 @@ LABEL_WIDTH=46 #same
 PAF_NUM_FILTERS=38
 HEATMAP_NUM_FILTERS=17
 BATCH_NORMALIZATION_ON=False
+INCLUDE_MASK=True
 
 #taken directly from the annotations JSON file
 DATASET_KPTS=['nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear', 'left_shoulder', 'right_shoulder',

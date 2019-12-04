@@ -10,7 +10,7 @@ if TPU_MODE:
     from tpu_training.config_tpu import *
 
     gs_prefix = "gs://"
-    def get_tfrecord_filenames():
+    def get_tfrecord_filenames(permissive=False):
         print("Retrieving TFrecords in TPU_mode")
         train_prefix = TRANSFORMED_TRAIN_ANNOTATIONS_PATH.split(os.sep)[-1]
         val_prefix = TRANSFORMED_VALIDATION_ANNOTATIONS_PATH.split(os.sep)[-1]
@@ -20,10 +20,11 @@ if TPU_MODE:
         train_blobs = storage_client.list_blobs(GCS_TFRECORDS_BUCKETNAME, prefix=train_prefix)
         val_blobs = storage_client.list_blobs(GCS_TFRECORDS_BUCKETNAME, prefix=val_prefix)
 
-        if not train_blobs:
-            raise ValueError("Couldn't find training TFrecord files at:"+GCS_TFRECORDS_BUCKETNAME+"/"+train_prefix)
-        if not val_blobs:
-            raise ValueError("Couldn't find validation TFrecord files at:"+GCS_TFRECORDS_BUCKETNAME+"/"+train_prefix)
+        if not permissive:
+            if not train_blobs:
+                raise ValueError("Couldn't find training TFrecord files at:"+GCS_TFRECORDS_BUCKETNAME+"/"+train_prefix)
+            if not val_blobs:
+                raise ValueError("Couldn't find validation TFrecord files at:"+GCS_TFRECORDS_BUCKETNAME+"/"+train_prefix)
 
         tfrecord_files_train = [gs_prefix + GCS_TFRECORDS_BUCKETNAME + '/' + blob.name for blob in train_blobs]
         tfrecord_files_val = [gs_prefix + GCS_TFRECORDS_BUCKETNAME + '/' + blob.name for blob in val_blobs]
@@ -31,17 +32,18 @@ if TPU_MODE:
         return  tfrecord_files_train,tfrecord_files_val
 else:
     import glob
-    def get_tfrecord_filenames():
+    def get_tfrecord_filenames(permissive=False):
         print("Retrieving TFrecords in local mode")
         tfrecord_files_train = glob.glob(TRANSFORMED_TRAIN_ANNOTATIONS_PATH + "-*.tfrecords")
         tfrecord_files_train.sort()
         tfrecord_files_val = glob.glob(TRANSFORMED_VALIDATION_ANNOTATIONS_PATH+ "-*.tfrecords")
         tfrecord_files_val.sort()
 
-        if not tfrecord_files_val:
-            raise ValueError("Couldn't find training TFrecord files at:"+TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
-        if not tfrecord_files_train:
-            raise ValueError("Couldn't find validation TFrecord files at:"+TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
+        if not permissive:
+            if not tfrecord_files_val:
+                raise ValueError("Couldn't find training TFrecord files at:"+TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
+            if not tfrecord_files_train:
+                raise ValueError("Couldn't find validation TFrecord files at:"+TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
         return tfrecord_files_train,tfrecord_files_val
 
 TF_parser = dataset_functions.TFrecordParser()
