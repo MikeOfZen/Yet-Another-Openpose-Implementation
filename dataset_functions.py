@@ -34,7 +34,7 @@ class LabelTransformer():
     def __init__(self):
         y_grid=tf.linspace(0.0,1.0,LABEL_HEIGHT)
         x_grid=tf.linspace(0.0,1.0,LABEL_WIDTH)
-        yy,xx=tf.meshgrid(y_grid,x_grid)
+        yy,xx=tf.meshgrid(y_grid,x_grid,indexing='ij') #indexing is a must, otherwise, it's just bizzare!
         self.grid=tf.stack((yy,xx),axis=-1)
 
     @tf.function
@@ -82,7 +82,7 @@ class LabelTransformer():
         result=tf.where(raw < 0.001, 0.0, raw)
 
         result=tf.transpose(result,(1,2,0)) #must transpose to match the moel output
-        result=tf.ensure_shape(result,([LABEL_HEIGHT, LABEL_WIDTH,HEATMAP_NUM_FILTERS]))
+        result=tf.ensure_shape(result,([LABEL_HEIGHT, LABEL_WIDTH,HEATMAP_NUM_FILTERS]),name="kpts_enusured_shape")
         return result
 
 
@@ -128,7 +128,7 @@ class LabelTransformer():
         result_x = result[..., 1]
         result = tf.concat((result_y, result_x), axis=-1)
 
-        result=tf.ensure_shape(result,([LABEL_HEIGHT, LABEL_WIDTH, PAF_NUM_FILTERS]))
+        result=tf.ensure_shape(result,([LABEL_HEIGHT, LABEL_WIDTH, PAF_NUM_FILTERS]),name="paf_enusured_shape")
         return result
 
 
