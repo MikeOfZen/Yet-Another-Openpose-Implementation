@@ -48,9 +48,18 @@ def encode_example(idd, image_raw, size, kpts, joints,mask):
 
 
 def transform_keypts(keypts:list, size:np.ndarray):
-    """take the list form, numpyify and form to (x,17,3) tensor where x is the number of persons in image"""
+    """take the list form, numpyifies and forms to (number of persons,numpber of kpts(17),3) tensor,
+    also switches coords to match the rest of the system ie Y,X instad of X,Y"""
     keypts_np=np.array(keypts, dtype=np.float32)
+
     keypts_np=keypts_np.reshape((-1,17,3)) #form the list into a correctly shaped tensor
+
+    #critical, the incoming coords are in X,Y order, but everything else is in Y,X order!
+    X = np.array(keypts_np[..., 0])
+    Y = np.array(keypts_np[..., 1])
+    keypts_np[..., 0] = Y
+    keypts_np[..., 1] = X
+
     #normalizing now saves this computation later for every tensor
     #the pixel idx get normalized to 0..1 range so pixel at (100,300) on a (400,600) sized image becomes (0.25,0.5)
     if NORMALIZE_SIZE:
@@ -59,7 +68,10 @@ def transform_keypts(keypts:list, size:np.ndarray):
 
 
 def create_all_joints(all_keypts):
-    """create a joints tensor from keypoints tensor, according to COCO joints"""
+    """create a joints tensor from keypoints tensor, according to COCO joints
+    :param all_keypts - tensor of shape (number of persons,numpber of kpts(17),3)
+    :return tensor of shape (number of persons,numpber of joints(19),5)"""
+
     def create_joints(keypts):
         joints = []
         for kp1_idx, kp2_idx in DATASET_JOINTS:
@@ -124,7 +136,7 @@ class FileSharder():
         self._finish_file()
 
 def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, normalize_size=True, records_per_file=1000):
-    """This script transforms the COCO 201 keypoint train,val files
+    """This script transforms the COCO 2017 keypoint train,val files
     into a format with all keypoints and joints for an image, in a more convinent format,
     where the first axes is the bodypart or joint, the second is the object, and the third are the
     components (x,y,a) for keypoint and (x1,y1,x2,y2,a) for joint.
@@ -139,7 +151,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
 
     category=1
     imgIds = coco.getImgIds(catIds=[category])
-    #imgIds.sort()
+    imgIds.sort()
     print("Found %d images" % len(imgIds))
 
     files_path=transformed_annotations_file+"-{:03}.tfrecords"
@@ -147,7 +159,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
         for img_id in imgIds:
             img_info = coco.loadImgs(img_id)[0]
 
-            size=[int(img_info['height']),int(img_info['width'])]
+            size=[img_info['height'],img_info['width']]
 
             annIds = coco.getAnnIds(imgIds=[img_id])
             anns = coco.loadAnns(annIds)
@@ -161,7 +173,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
             if not persons_kpts:
                 continue #this means that the image has no people with keypoints annotations
 
-            keypoints=transform_keypts(persons_kpts,size)
+            keypoints=transform_keypts(persons_kpts,np.array(size))
             tr_joint=create_all_joints(keypoints)
             tr_keypoints= keypoints.transpose((1, 0, 2))  # transpose keypoints for later stages
 

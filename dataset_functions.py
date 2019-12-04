@@ -32,10 +32,10 @@ class TFrecordParser():
 
 class LabelTransformer():
     def __init__(self):
-        x_grid=tf.linspace(0.0,1.0,LABEL_WIDTH)
         y_grid=tf.linspace(0.0,1.0,LABEL_HEIGHT)
-        xx,yy=tf.meshgrid(x_grid,y_grid)
-        self.grid=tf.stack((xx,yy),axis=-1)
+        x_grid=tf.linspace(0.0,1.0,LABEL_WIDTH)
+        yy,xx=tf.meshgrid(y_grid,x_grid)
+        self.grid=tf.stack((yy,xx),axis=-1)
 
     @tf.function
     def keypoints_spots_vloop(self, kpts_tensor):
@@ -43,7 +43,7 @@ class LabelTransformer():
         this version of the function works via a nested loop vs the other version which uses map_fn.
         *does not support batched input
         :param kpts_tensor - must be a tf.RaggedTensor of shape (num of keypoints(17 for coco),number of persons,3)
-        :return tf.Tensor of shape (num of keypoints(17 for coco),IMAGE_HEIGHT,IMAGE_WIDTH) where each point """
+        :return tf.Tensor of shape (IMAGE_HEIGHT,IMAGE_WIDTH,num of keypoints(17 for coco)) where each point """
         kpts_tensor=kpts_tensor.to_tensor()
         results = tf.TensorArray(tf.float32, size=kpts_tensor.shape[0])
         for i in tf.range(kpts_tensor.shape[0]):
@@ -107,24 +107,26 @@ class LabelTransformer():
             return tf.linalg.norm(ortho_dist, axis=-1)
 
 
+
     @tf.function
     def joints_PAFs(self, joints_tensor):
         """This transforms the joints coords coming from the dataset into vector fields label tensor
         *does not support batched input
         :param joints_tensor - must be a tf.RaggedTensor of shape (num of joints(19 for coco),number of persons,3)
-        :return tf.Tensor of shape (num of joints(19 for coco),IMAGE_HEIGHT,IMAGE_WIDTH,2)"""
+        :return tf.Tensor of shape (IMAGE_HEIGHT,IMAGE_WIDTH,num of joints(19 for coco)*2)"""
         joints_tensor = joints_tensor.to_tensor()  # seems to be mandatory for map_fn
         all_pafs = tf.map_fn(self.layer_PAF,
-                             joints_tensor)  # ,parallel_iterations=20) for cpu it has no difference, maybe for gpu it will
+                             joints_tensor)
+                           # ,parallel_iterations=20) for cpu it has no difference, maybe for gpu it will
         # this must be executed in the packing order, to produce the layers in the right order
         result=tf.stack(all_pafs)
 
         #must transpose to fit the label (NJOINTS,LABEL_HEIGHT, LABEL_WIDTH, 2) to
         # [LABEL_HEIGHT, LABEL_WIDTH,PAF_NUM_FILTERS=NJOINTS*2]
         result=tf.transpose(result, [1, 2, 0, 3])
-        result_x = result[..., 0]
-        result_y = result[..., 1]
-        result = tf.concat((result_x, result_y), axis=-1)
+        result_y = result[..., 0]
+        result_x = result[..., 1]
+        result = tf.concat((result_y, result_x), axis=-1)
 
         result=tf.ensure_shape(result,([LABEL_HEIGHT, LABEL_WIDTH, PAF_NUM_FILTERS]))
         return result
