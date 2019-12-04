@@ -1,6 +1,6 @@
 from os import sep
 import numpy as np
-
+from keypoints_config import *
 
 #Training Mode
 TPU_MODE=False
@@ -29,18 +29,11 @@ LABEL_HEIGHT=46 #this stems from the model label output size
 LABEL_WIDTH=46 #same
 
 #model settings
-PAF_NUM_FILTERS=38
-HEATMAP_NUM_FILTERS=17
+PAF_NUM_FILTERS= len(JOINTS_DEF) * 2
+HEATMAP_NUM_FILTERS=len(KEYPOINTS_DEF)
 BATCH_NORMALIZATION_ON=False
 INCLUDE_MASK=True
 
-#taken directly from the annotations JSON file
-DATASET_KPTS=['nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear', 'left_shoulder', 'right_shoulder',
-                'left_elbow', 'right_elbow', 'left_wrist', 'right_wrist', 'left_hip', 'right_hip', 'left_knee',
-                'right_knee', 'left_ankle', 'right_ankle']
-#shifted by -1 to match keypoints idx
-DATASET_JOINTS=[[15, 13], [13, 11], [16, 14], [14, 12], [11, 12], [5, 11], [6, 12], [5, 6], [5, 7], [6, 8], [7, 9], [8, 10],
-                [ 1, 2], [ 0, 1], [ 0, 2], [ 1, 3], [ 2, 4], [ 3, 5], [ 4, 6]]
 
 #this is the gaussian spot sie that will be drawn on the training labels
 GAUSSIAN_SPOT_SIGMA_SQ=0.02 #used for the size of the gaussian spot for each keypoint
