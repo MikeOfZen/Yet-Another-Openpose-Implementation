@@ -30,10 +30,6 @@ def encode_example(idd, image_raw, size, kpts, joints,mask):
     joints = tf.io.serialize_tensor(joints).numpy()
     mask = tf.io.serialize_tensor(mask).numpy()
 
-    #TODO add kpts_bb mask_seg mask_bb
-
-    # kpts = kpts.tobytes() #numpy serialization
-    # joints = joints.tobytes()  #numpy serialization
     image_raw=image_raw.numpy()
 
     feature = {
@@ -137,7 +133,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
     :param normalize_size determines whether the pixel coords should be normalized by size to 0..1 range
     """
 
-    print("Reading "+keypoint_annotations_file)
+    print("\nReading "+keypoint_annotations_file)
 
     coco = COCO(keypoint_annotations_file)
 

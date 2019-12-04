@@ -23,7 +23,7 @@ class TFrecordParser():
 
         kpts = tf.io.parse_tensor(parsed['kpts'], tf.float32)
         joints = tf.io.parse_tensor(parsed['joints'], tf.float32)
-        mask = tf.io.parse_tensor(parsed['mask'], tf.bool)
+        mask = tf.io.parse_tensor(parsed['mask'], tf.float32)
 
         kpts = tf.RaggedTensor.from_tensor(kpts)
         joints = tf.RaggedTensor.from_tensor(joints)
@@ -193,7 +193,7 @@ def make_label_tensors(elem):
 
     mask=elem['mask']
     mask = tf.ensure_shape(mask, ([LABEL_HEIGHT, LABEL_WIDTH]))
-    mask=tf.expand_dims(mask,axis=-1) #required
+    #mask=tf.expand_dims(mask,axis=-1) #required
 
     new_elem={}
     #new_elem.update(elem)
