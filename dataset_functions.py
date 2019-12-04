@@ -213,4 +213,4 @@ def place_training_labels(elem):
     kpt_tr=elem['kpts']
     image=elem['image']
     mask=elem["mask"]
-    return (image,mask),(paf_tr,paf_tr,paf_tr,paf_tr,kpt_tr,kpt_tr) #this should match the model outputs, and is different for each model
+    return image,(paf_tr,paf_tr,paf_tr,paf_tr,kpt_tr,kpt_tr),mask #this should match the model outputs, and is different for each model

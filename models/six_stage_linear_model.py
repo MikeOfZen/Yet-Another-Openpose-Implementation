@@ -1,9 +1,9 @@
 import tensorflow as tf
-from config import IMAGE_HEIGHT,IMAGE_WIDTH,PAF_NUM_FILTERS,HEATMAP_NUM_FILTERS,BATCH_NORMALIZATION_ON,INCLUDE_MASK,LABEL_HEIGHT,LABEL_WIDTH
+from config import IMAGE_HEIGHT,IMAGE_WIDTH,PAF_NUM_FILTERS,HEATMAP_NUM_FILTERS,BATCH_NORMALIZATION_ON,INCLUDE_MASK
 
 
 INPUT_SHAPE=(IMAGE_HEIGHT, IMAGE_WIDTH, 3)
-MASK_SHAPE=(LABEL_HEIGHT, LABEL_WIDTH, 1)
+
 
 class ModelMaker():
     """Creates a model for the OpenPose project, structre is 10 layers of VGG16 followed by a few convultions, and 6 stages 
@@ -74,13 +74,7 @@ class ModelMaker():
         if BATCH_NORMALIZATION_ON: x = tf.keras.layers.BatchNormalization(name=name + "_outputbn")(x)
         return x
 
-    def add_mask_to_outputs(self,mask_input,outputs):
-        new_outputs=[]
-        for output in outputs:
-            new_outputs.append(tf.concat([mask_input,output],axis=-1))
-        return new_outputs
-
-    def create_models(self):        
+    def create_models(self):
         input_tensor = tf.keras.layers.Input(shape=INPUT_SHAPE) #first layer of the model
         #stage 00 (i know)
         stage00_output=self._make_vgg_input_model(input_tensor)       
@@ -101,15 +95,9 @@ class ModelMaker():
         # stage6
         stage6_output = self._make_stageI([stage5_output, stage4_output, stage0_output], "stage6heatmap", 128, HEATMAP_NUM_FILTERS)
 
-        training_inputs=input_tensor
+
         training_outputs = [stage1_output, stage2_output, stage3_output, stage4_output, stage5_output, stage6_output]
-
-        if INCLUDE_MASK:
-            mask_input= tf.keras.layers.Input(shape=MASK_SHAPE)
-            training_outputs=self.add_mask_to_outputs(mask_input,training_outputs)
-            training_inputs=[input_tensor,mask_input]
-
-        train_model = tf.keras.Model(inputs=training_inputs, outputs=training_outputs)
+        train_model = tf.keras.Model(inputs=input_tensor, outputs=training_outputs)
 
         test_outputs = [stage4_output, stage6_output]
         test_model = tf.keras.Model(inputs=input_tensor, outputs=test_outputs)
