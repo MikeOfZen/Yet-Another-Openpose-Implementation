@@ -26,5 +26,3 @@ class AnalogRecall(tf.keras.metrics.Metric):
     def result(self):
         return self.mean
 
-
-def weighted
