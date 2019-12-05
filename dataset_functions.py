@@ -215,6 +215,8 @@ def make_label_tensors(elem):
         kpt_tr=tf.concat([mask, kpt_tr], axis=-1) #add mask as zero channel to inputs
         paf_tr=tf.concat([mask, paf_tr], axis=-1)
 
+        new_elem["mask"] = mask
+
     new_elem["id"]= idd
     new_elem["paf"] = paf_tr
     new_elem["kpts"] = kpt_tr
