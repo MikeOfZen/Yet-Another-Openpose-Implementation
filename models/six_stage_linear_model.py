@@ -1,9 +1,9 @@
 import tensorflow as tf
-from config import IMAGE_HEIGHT,IMAGE_WIDTH,PAF_NUM_FILTERS,HEATMAP_NUM_FILTERS,BATCH_NORMALIZATION_ON,INCLUDE_MASK
+from config import IMAGE_HEIGHT,IMAGE_WIDTH,PAF_NUM_FILTERS,HEATMAP_NUM_FILTERS,BATCH_NORMALIZATION_ON,INCLUDE_MASK,LABEL_HEIGHT,LABEL_WIDTH
 
 
 INPUT_SHAPE=(IMAGE_HEIGHT, IMAGE_WIDTH, 3)
-
+MASK_SHAPE=(LABEL_HEIGHT, LABEL_WIDTH, 1)
 
 class ModelMaker():
     """Creates a model for the OpenPose project, structre is 10 layers of VGG16 followed by a few convultions, and 6 stages 
@@ -13,9 +13,9 @@ class ModelMaker():
         self.conv_block_nfilters = 96
         self.stage_final_nfilters = 256
 
-        self.get_vgg_layer_config_weights()
+        self._get_vgg_layer_config_weights()
 
-    def get_vgg_layer_config_weights(self):
+    def _get_vgg_layer_config_weights(self):
         vgg_input_model = tf.keras.applications.VGG16(weights='imagenet', include_top=False, input_shape=INPUT_SHAPE)
         name_last_layer = "block3_pool"
         
@@ -74,8 +74,24 @@ class ModelMaker():
         if BATCH_NORMALIZATION_ON: x = tf.keras.layers.BatchNormalization(name=name + "_outputbn")(x)
         return x
 
-    def create_models(self):
+    @staticmethod
+    def _psd_zero_mask_to_outputs(outputs,mask_input):
+        new_outputs=[]
+        for i,output in enumerate(outputs):
+            # batch_size = tf.shape(output)[0]
+            # pad=tf.zeros((batch_size,LABEL_HEIGHT,LABEL_WIDTH,1),dtype=tf.float32,name="mask_pad%d"%i)
+            name=output.name.split("/")[0]+"_mask"
+            #pad=tf.keras.backend.constant(0,shape=(None,LABEL_HEIGHT,LABEL_WIDTH,1),dtype=tf.float32)
+            new_outputs.append(
+                tf.keras.layers.concatenate([mask_input,output],axis=-1,name=name)  #concat the mask to the output, at idx 0
+            )
+        return new_outputs
+
+    def create_models(self):        
         input_tensor = tf.keras.layers.Input(shape=INPUT_SHAPE) #first layer of the model
+
+        #mask_string="_pre_mask" if INCLUDE_MASK else ""
+
         #stage 00 (i know)
         stage00_output=self._make_vgg_input_model(input_tensor)       
         #stage 0 2conv)
@@ -95,9 +111,15 @@ class ModelMaker():
         # stage6
         stage6_output = self._make_stageI([stage5_output, stage4_output, stage0_output], "stage6heatmap", 128, HEATMAP_NUM_FILTERS)
 
-
+        training_inputs=input_tensor
         training_outputs = [stage1_output, stage2_output, stage3_output, stage4_output, stage5_output, stage6_output]
-        train_model = tf.keras.Model(inputs=input_tensor, outputs=training_outputs)
+
+        if INCLUDE_MASK:  #this is used to pass the mask directly to the loss function through the model
+            mask_input= tf.keras.layers.Input(shape=MASK_SHAPE)
+            training_outputs=self._psd_zero_mask_to_outputs(training_outputs,mask_input)
+            training_inputs=[input_tensor,mask_input]
+
+        train_model = tf.keras.Model(inputs=training_inputs, outputs=training_outputs)
 
         test_outputs = [stage4_output, stage6_output]
         test_model = tf.keras.Model(inputs=input_tensor, outputs=test_outputs)

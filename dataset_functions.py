@@ -204,17 +204,21 @@ def make_label_tensors(elem):
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
     image = tf.image.resize(image, IMAGE_SIZE)
 
-    mask=elem['mask']
-    mask = tf.ensure_shape(mask, ([LABEL_HEIGHT, LABEL_WIDTH]))
-    #mask=tf.expand_dims(mask,axis=-1) #required
-
     new_elem={}
-    #new_elem.update(elem)
+    #new_elem.update(elem) #if need to pass something through
+
+    if INCLUDE_MASK:
+        mask=elem['mask']
+        mask = tf.ensure_shape(mask, ([LABEL_HEIGHT, LABEL_WIDTH]))
+        mask=tf.expand_dims(mask,axis=-1) #required to concat
+
+        kpt_tr=tf.concat([mask, kpt_tr], axis=-1) #add mask as zero channel to inputs
+        paf_tr=tf.concat([mask, paf_tr], axis=-1)
+
     new_elem["id"]= idd
     new_elem["paf"] = paf_tr
     new_elem["kpts"] = kpt_tr
     new_elem["image"] = image
-    new_elem["mask"]=mask
 
     return new_elem
 
@@ -225,5 +229,10 @@ def place_training_labels(elem):
     paf_tr=elem['paf']
     kpt_tr=elem['kpts']
     image=elem['image']
-    mask=elem["mask"]
-    return image,(paf_tr,paf_tr,paf_tr,paf_tr,kpt_tr,kpt_tr),mask #this should match the model outputs, and is different for each model
+    
+    if INCLUDE_MASK:
+        inputs=(elem['mask'],image)
+    else: 
+        inputs=image
+
+    return inputs,(paf_tr,paf_tr,paf_tr,paf_tr,kpt_tr,kpt_tr) #this should match the model outputs, and is different for each model
