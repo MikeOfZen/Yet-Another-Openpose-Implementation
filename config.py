@@ -4,7 +4,7 @@ from keypoints_config import *
 
 #Training Mode
 TPU_MODE=False
-
+ASK_FOR_CHECKPOINTS=False
 
 #Definitions for COCO 2017 dataset
 DATASET_PATH="." + sep + "dataset"

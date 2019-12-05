@@ -78,12 +78,9 @@ class ModelMaker():
     def _psd_zero_mask_to_outputs(outputs,mask_input):
         new_outputs=[]
         for i,output in enumerate(outputs):
-            # batch_size = tf.shape(output)[0]
-            # pad=tf.zeros((batch_size,LABEL_HEIGHT,LABEL_WIDTH,1),dtype=tf.float32,name="mask_pad%d"%i)
             name=output.name.split("/")[0]+"_mask"
-            #pad=tf.keras.backend.constant(0,shape=(None,LABEL_HEIGHT,LABEL_WIDTH,1),dtype=tf.float32)
             new_outputs.append(
-                tf.keras.layers.concatenate([mask_input,output],axis=-1,name=name)  #concat the mask to the output, at idx 0
+                tf.keras.layers.concatenate([output,mask_input],axis=-1,name=name)  #concat the mask to the output, at idx 0
             )
         return new_outputs
 
@@ -117,7 +114,7 @@ class ModelMaker():
         if INCLUDE_MASK:  #this is used to pass the mask directly to the loss function through the model
             mask_input= tf.keras.layers.Input(shape=MASK_SHAPE)
             training_outputs=self._psd_zero_mask_to_outputs(training_outputs,mask_input)
-            training_inputs=(mask_input,input_tensor)
+            training_inputs=(input_tensor,mask_input)
 
         train_model = tf.keras.Model(inputs=training_inputs, outputs=training_outputs)
 

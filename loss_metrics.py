@@ -28,8 +28,9 @@ class AnalogRecall(tf.keras.metrics.Metric):
 
 class MaskedMeanSquaredError(tf.keras.losses.MeanSquaredError):
     def __call__(self, true, pred):
-        mask=true[...,0] #split the concatenated input
-        true=true[...,1:]
-        empty_mask=pred[...,0] #coming from the model, required to silence keras about shape mismatch
-        pred=pred[...,1:]
+        mask=true[...,-1:] #split the concatenated input
+        true=true[...,:-1]
+        empty_mask=pred[...,-1:] #coming from the model, required to silence keras about shape mismatch
+        pred=pred[...,:-1]
+
         return super(MaskedMeanSquaredError, self).__call__(true,pred,mask)
