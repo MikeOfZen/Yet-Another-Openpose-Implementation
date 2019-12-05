@@ -134,3 +134,13 @@ def draw_kpts(kpts,squeeze=1,kpts_alpha=0.6):
     alpha=alpha*kpts_alpha
     spots[..., 3] = alpha
     plt.imshow(spots)
+
+
+def plot_fields(*fields, colorbars=False):
+    num = len(fields)
+    cols = np.ceil(np.sqrt(num))
+    rows = np.ceil(num / cols)
+    for i, field in enumerate(fields):
+        plt.subplot(rows, cols, i+1)
+        plt.imshow(field)
+        if colorbars: plt.colorbar()

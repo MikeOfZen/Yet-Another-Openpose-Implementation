@@ -59,7 +59,7 @@ class LabelTransformer():
                 total_dist=tf.math.minimum(spot_dist,total_dist)
 
             results=results.write(i, total_dist)
-        raw=tf.exp((-(results.stack()**2)/GAUSSIAN_SPOT_SIGMA_SQ))
+        raw=tf.exp((-(results.stack()**2) / KPT_HEATMAP_GAUSSIAN_SIGMA_SQ))
         result=tf.where(raw < 0.001, 0.0, raw)
 
         result=tf.transpose(result,(1,2,0)) #must transpose to match the moel output
@@ -78,7 +78,7 @@ class LabelTransformer():
         all_dists = tf.map_fn(self.keypoints_layer,
                               kpts_tensor)  # ,parallel_iterations=20) for cpu it has no difference, maybe for gpu it will
 
-        raw = tf.exp((-(all_dists ** 2) / GAUSSIAN_SPOT_SIGMA_SQ))
+        raw = tf.exp((-(all_dists ** 2) / KPT_HEATMAP_GAUSSIAN_SIGMA_SQ))
         result=tf.where(raw < 0.001, 0.0, raw)
 
         result=tf.transpose(result,(1,2,0)) #must transpose to match the moel output
@@ -149,28 +149,39 @@ class LabelTransformer():
         *does not support batched input
         :return a tensor of shape (LABEL_HEIGHT, LABEL_WIDTH, 2)
         """
-
         jpts = tf.reshape(joint[0:4], (2, 2))  # reshape to ((x1,y1),(x2,y2))
         if joint[4] == tf.constant(0.0):
             return tf.zeros((LABEL_HEIGHT, LABEL_WIDTH, 2), dtype=tf.float32)  # in case of empty joint
         else:
-            # this follows the OpenPose paper ofr generating the PAFs
+            # this follows the OpenPose paper of generating the PAFs
             vector_full = jpts[1] - jpts[0]  # get the joint vector
             vector_length = tf.linalg.norm(vector_full)  # get joint length
             vector_hat = vector_full / vector_length  # get joint unit vector
-
-            grid_vectors = self.grid - jpts[0]  # get grid of vectors from first joint point
-            projections = tf.tensordot(grid_vectors, vector_hat, 1)  # get projection on the joint unit vector
-
             normal_vector = tf.stack((-vector_hat[1], vector_hat[0]))
-            n_projections = tf.tensordot(grid_vectors, normal_vector, 1)  # get projection on the joint normal unit vector
-            na_projections = tf.abs(n_projections)  # absolute value to get both sides of rhe joint
 
-            limit = (0 <= projections) & (projections <= vector_length) & (na_projections <= JOINT_WIDTH)
+            vectors_from_begin = self.grid - jpts[0]  # get grid of vectors from first joint point
+            vectors_from_end = self.grid - jpts[1]  # get grid of vectors from second joint point
 
-            limit_brdcst = tf.stack((limit, limit), axis=-1)  # this is for broadcasting to the 2 tuple
+            projections = tf.tensordot(vectors_from_begin, vector_hat, 1)  # get projection on the joint unit vector
+            n_projections = tf.tensordot(vectors_from_begin, normal_vector, 1)  # get projection on the joint normal unit vector
 
-            return tf.where(limit_brdcst, vector_hat, tf.constant((0.0, 0.0)))
+            dist_from_begin = tf.linalg.norm(vectors_from_begin, axis=-1)  # get distances from the begining, and end
+            dist_from_end = tf.linalg.norm(vectors_from_end, axis=-1)
+
+            begin_gaussian_mag = tf.exp((-(dist_from_begin ** 2) / PAF_GAUSSIAN_SIGMA_SQ))  # compute gaussian bells
+            end_gaussian_mag = tf.exp((-(dist_from_end ** 2) / PAF_GAUSSIAN_SIGMA_SQ))
+            normal_gaussian_mag = tf.exp((-(n_projections ** 2) / PAF_GAUSSIAN_SIGMA_SQ))
+
+            limit = (0 <= projections) & (projections <= vector_length)  # cutoff the joint before beginning and after end
+            limit = tf.cast(limit, tf.float32)
+            bounded_normal_gaussian_mag = normal_gaussian_mag * limit  # bound the normal distance by the endpoints
+
+            max_magnitude = tf.math.reduce_max((begin_gaussian_mag, end_gaussian_mag, bounded_normal_gaussian_mag), axis=0)
+
+            vector_mag = tf.stack((max_magnitude, max_magnitude), axis=-1)
+
+            result = vector_mag * vector_hat  # broadcast joint direction vector to magnitude field
+            return result
 
 
 _label_transformer = LabelTransformer()

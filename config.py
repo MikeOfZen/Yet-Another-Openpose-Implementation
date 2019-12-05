@@ -36,10 +36,10 @@ INCLUDE_MASK=True
 
 
 #this is the gaussian spot sie that will be drawn on the training labels
-GAUSSIAN_SPOT_SIGMA_SQ=0.02 #used for the size of the gaussian spot for each keypoint
-JOINT_WIDTH=0.02  #used for the width of the vector field generated for each joint as a PAF, the unit is relative to image size ie 0..1
+KPT_HEATMAP_GAUSSIAN_SIGMA_SQ=0.02 #used for the size of the gaussian spot for each keypoint
+#JOINT_WIDTH=0.02  #used for the width of the vector field generated for each joint as a PAF, the unit is relative to image size ie 0..1
                     #for lower resolution, a value too low (~0.005) here will make the vectors too sparse
-
+PAF_GAUSSIAN_SIGMA_SQ=0.003 #similiar to joint width, but works on gaussian width,tradeoff between model certainty and number of persons that can be discriminated in a frame
 
 #dataset settings
 SHUFFLE=True
