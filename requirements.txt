@@ -2,5 +2,8 @@ objectpath
 IPython
 numpy
 matplotlib
-tensorflow
+tensorflow==2.1
 google-cloud-storage
+opencv-python
+cython
+pycocotools
