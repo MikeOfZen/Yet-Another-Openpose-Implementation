@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import numpy as np
 import tensorflow as tf
 import cv2
@@ -246,5 +248,5 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
             writer.write(example)
 
 if __name__ == "__main__":
-    #coco_to_TFrecords(TRAIN_ANNOTATIONS_PATH, TRANSFORMED_TRAIN_ANNOTATIONS_PATH)
+    coco_to_TFrecords(TRAIN_ANNOTATIONS_PATH, TRANSFORMED_TRAIN_ANNOTATIONS_PATH)
     coco_to_TFrecords(VALIDATION_ANNOTATIONS_PATH, TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
