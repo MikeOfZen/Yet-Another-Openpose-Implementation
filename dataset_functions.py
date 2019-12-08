@@ -149,7 +149,7 @@ class LabelTransformer():
         :return a tensor of shape (LABEL_HEIGHT, LABEL_WIDTH, 2)
         """
         jpts = tf.reshape(joint[0:4], (2, 2))  # reshape to ((x1,y1),(x2,y2))
-        if joint[4] == tf.constant(0.0):
+        if joint[4] == tf.constant(0.0) or tf.reduce_all(jpts[1] - jpts[0]==0.0):
             return tf.zeros((LABEL_HEIGHT, LABEL_WIDTH, 2), dtype=tf.float32)  # in case of empty joint
         else:
             # this follows the OpenPose paper of generating the PAFs
