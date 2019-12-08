@@ -24,7 +24,7 @@ KEYPOINTS_DEF=(
 
 #our newly defined joints (disregarding coco defined ones)
 JOINTS_DEF=(
-    (0,1),      #0
+    (0,1),      #0 nose to neck
     (1,2),      #1
     (2,3),      #2
     (3,4),      #3

@@ -78,7 +78,7 @@ def plot_skeleton_on_img(PAFs_array, img):
     plt.imshow(actual_colors)
     plt.show()
 
-def show_pafs_kpts_img(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6):
+def show_img_pafs_kpts(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6):
     """Draws an image, a keypoints layer, a part affinity field vector field, all three, or any combintaion thereof
     *the PAF array shape should be somewhat smaller ~x4 than the image to not overwhelm it.
     *doesnt work on batch
@@ -89,10 +89,6 @@ def show_pafs_kpts_img(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6):
     :param kpts_alpha float 0..1 range for the transperency intesity of the kpts
     """
     assert type(img) is np.ndarray or type(kpts) is np.ndarray or type(pafs) is np.ndarray , "Missing input or not numpy.ndarray"
-
-
-
-
 
     plt.figure(figsize=(8,8))
 
@@ -120,8 +116,8 @@ def draw_pafs(pafs):
     num_pafs=int(pafs.shape[-1] / 2)
     for i in range(num_pafs):
         # pruned_field=prune_quiver(PAF,downsample)
-        U = pafs[..., i]
         V = pafs[..., num_pafs+i]
+        U = pafs[..., i]
         plt.quiver(U, V, scale=20, angles="xy", minlength=0.1, linewidth=0.1, color=cmap(norm(i)))
 
 def draw_kpts(kpts,squeeze=1,kpts_alpha=0.6):
