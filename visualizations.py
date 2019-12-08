@@ -116,9 +116,9 @@ def draw_pafs(pafs):
     num_pafs=int(pafs.shape[-1] / 2)
     for i in range(num_pafs):
         # pruned_field=prune_quiver(PAF,downsample)
-        V = pafs[..., num_pafs+i]
-        U = pafs[..., i]
-        plt.quiver(U, V, scale=20, angles="xy", minlength=0.1, linewidth=0.1, color=cmap(norm(i)))
+        Y = pafs[..., i]
+        X = pafs[..., num_pafs+i]
+        plt.quiver(X, Y, scale=20, angles="xy", minlength=0.1, linewidth=0.1, color=cmap(norm(i)))
 
 def draw_kpts(kpts,squeeze=1,kpts_alpha=0.6):
     superimposed_kpts=kpts.max(axis=-1)
