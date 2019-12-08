@@ -1,5 +1,5 @@
 import datetime
-from os import sep,mkdir
+from os import sep,makedirs
 
 import tensorflow as tf
 
@@ -9,18 +9,16 @@ now=datetime.datetime.now().strftime("%d%a%m%y-%H%M")
 
 checkpoints_path = CHECKPOINTS_PATH+sep+now+sep+"Checkpoint-E{epoch:04d}.ckpt"
 if not TPU_MODE:
-    mkdir(CHECKPOINTS_PATH+sep+now)
+    makedirs(CHECKPOINTS_PATH+sep+now, exist_ok=False)
 checkpoints_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoints_path,
                                              save_weights_only=True,
                                              verbose=1)
 
-tensorboard_path=TENSORBOARD_PATH+sep+now
+tensorboard_path=TENSORBOARD_PATH+"TB-"+now
 if not TPU_MODE:
-    mkdir(tensorboard_path)
+    makedirs(tensorboard_path, exist_ok=False)
 tensorboard_callback=tf.keras.callbacks.TensorBoard(
-    log_dir=tensorboard_path
-    #,update_freq=5000 #to update sooner than every epoch
-)
+    log_dir=tensorboard_path)
 
 
 class PrintLR(tf.keras.callbacks.Callback):
