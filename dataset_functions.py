@@ -119,6 +119,8 @@ class LabelTransformer():
         # this must be executed in the packing order, to produce the layers in the right order
         result = tf.stack(all_pafs)
 
+        result = tf.where(abs(result) < 0.001, 0.0, result) #stabilize numerically
+
         # must transpose to fit the label (NJOINTS,LABEL_HEIGHT, LABEL_WIDTH, 2) to
         # [LABEL_HEIGHT, LABEL_WIDTH,PAF_NUM_FILTERS=NJOINTS*2]
         result = tf.transpose(result, [1, 2, 0, 3])
