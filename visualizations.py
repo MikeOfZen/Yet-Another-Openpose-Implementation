@@ -78,7 +78,7 @@ def plot_skeleton_on_img(PAFs_array, img):
     plt.imshow(actual_colors)
     plt.show()
 
-def show_img_pafs_kpts(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6):
+def show_img_pafs_kpts(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6,figure_size=8):
     """Draws an image, a keypoints layer, a part affinity field vector field, all three, or any combintaion thereof
     *the PAF array shape should be somewhat smaller ~x4 than the image to not overwhelm it.
     *doesnt work on batch
@@ -90,7 +90,7 @@ def show_img_pafs_kpts(img,pafs=None,kpts=None,squeeze_kpts=5,kpts_alpha=0.6):
     """
     assert type(img) is np.ndarray or type(kpts) is np.ndarray or type(pafs) is np.ndarray , "Missing input or not numpy.ndarray"
 
-    plt.figure(figsize=(8,8))
+    plt.figure(figsize=(figure_size,figure_size))
 
     kwargs={}
     if type(pafs) is np.ndarray:
