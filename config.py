@@ -68,7 +68,7 @@ LEARNING_RATE_SCHEDUELE[100:]=0.3
 LEARNING_RATE_SCHEDUELE*=BASE_LEARNING_RATE
 
 
-RESULTS_ROOT="/tmp"
+RESULTS_ROOT="/home/michael_zl_prime/training/"
 TENSORBOARD_PATH=RESULTS_ROOT + sep +"tensorboard" #this will get overriden by tpu_config is used
 CHECKPOINTS_PATH=RESULTS_ROOT+ sep +"checkpoints" #this will get overriden by tpu_config is used
 MODELS_PATH=RESULTS_ROOT + sep + "models"
