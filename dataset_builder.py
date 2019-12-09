@@ -47,7 +47,7 @@ else:
         return tfrecord_files_train,tfrecord_files_val
 
 TF_parser = dataset_functions.TFrecordParser()
-def build_validation_ds(tfrecord_filenames:list)->tf.data.Dataset:
+def build_validation_ds(tfrecord_filenames:list,labels_placement_function)->tf.data.Dataset:
     """Generate validation dataset from TFrecord file locations
     :param tfrecord_files should be list of correct TFrecord filename, either local or remote (gcs, with gs:// prefix)"""
     # TFrecord files to raw format
@@ -60,11 +60,11 @@ def build_validation_ds(tfrecord_filenames:list)->tf.data.Dataset:
     # imgs,tensors to label_tensors (46,46,17/38)
     ds = ds.map(dataset_functions.make_label_tensors)
     # imgs,label_tensors arrange for model outputs
-    ds = ds.map(dataset_functions.place_training_labels)
+    ds = ds.map(labels_placement_function)
     ds = ds.batch(BATCH_SIZE)
     return ds
 
-def build_training_ds(tfrecord_filenames:list)->tf.data.Dataset:
+def build_training_ds(tfrecord_filenames:list,labels_placement_function)->tf.data.Dataset:
     """Generate training dataset from TFrecord file locations
     :param tfrecord_files should be list of correct TFrecord filename, either local or remote (gcs, with gs:// prefix)"""
     # TFrecord files to raw format
@@ -82,7 +82,7 @@ def build_training_ds(tfrecord_filenames:list)->tf.data.Dataset:
     # imgs,tensors to label_tensors (46,46,17/38)
     ds = ds.map(dataset_functions.make_label_tensors)
     # imgs,label_tensors arrange for model outputs
-    ds = ds.map(dataset_functions.place_training_labels)
+    ds = ds.map(labels_placement_function)
 
     ds = ds.batch(BATCH_SIZE)
     ds = ds.repeat()
