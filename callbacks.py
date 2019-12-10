@@ -1,40 +1,38 @@
-import datetime
-from os import sep,makedirs
+import utils
+from os import sep, makedirs
 
 import tensorflow as tf
 
-from config import LEARNING_RATE_SCHEDUELE,TENSORBOARD_PATH,CHECKPOINTS_PATH,TPU_MODE,RUN_NAME
 
-now=datetime.datetime.now().strftime("%d%a%m%y-%H%M")
+def make_checkpoint_callback(config):
+    checkpoints_path = config.CHECKPOINTS_PATH + sep + config.RUN_NAME + utils.now() + sep + "-E{epoch:04d}.ckpt"
+    if not config.TPU_MODE:
+        makedirs(config.CHECKPOINTS_PATH + sep + config.RUN_NAME + utils.now(), exist_ok=True)
 
-checkpoints_path = CHECKPOINTS_PATH+RUN_NAME+now+sep+"Checkpoint-E{epoch:04d}.ckpt"
-if not TPU_MODE:
-    makedirs(CHECKPOINTS_PATH+sep+now, exist_ok=False)
-checkpoints_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoints_path,
-                                             save_weights_only=True,
-                                             verbose=1)
+    return tf.keras.callbacks.ModelCheckpoint(filepath=checkpoints_path,
+                                              save_weights_only=True,
+                                              verbose=1)
 
-tensorboard_path=TENSORBOARD_PATH+RUN_NAME+now
-if not TPU_MODE:
-    makedirs(tensorboard_path, exist_ok=False)
-tensorboard_callback=tf.keras.callbacks.TensorBoard(
-    log_dir=tensorboard_path
-    ,update_freq=30
-    ,histogram_freq=1
-)
+
+def make_tensorboard_callback(config):
+    tensorboard_path = config.TENSORBOARD_PATH + sep + config.RUN_NAME + utils.now()
+    if not config.TPU_MODE:
+        makedirs(tensorboard_path, exist_ok=False)
+    return tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path
+                                          , update_freq=30
+                                          , histogram_freq=1
+                                          )
 
 
 class PrintLR(tf.keras.callbacks.Callback):
     """Callback for printing the LR at the beginging of each epoch"""
-    # def __init__(self,model:tf.keras.Model):
-    #     """:param model is the trained model"""
-    #     self.model=model
+
     def on_epoch_begin(self, epoch, logs=None):
-        print('\nLearning rate for epoch {} is {}'.format(epoch,self.model.optimizer.lr.numpy()))
+        print('\nLearning rate for epoch {} is {}'.format(epoch, self.model.optimizer.lr.numpy()))
 
-print_lr_callback=PrintLR()
 
-def get_lr(epoch):
-    return LEARNING_RATE_SCHEDUELE[epoch]
+def make_LRscheduler_callback(learning_rate_scheduele):
+    def get_lr(epoch):
+        return learning_rate_scheduele[epoch]
 
-learning_rate_scheduler_callback=tf.keras.callbacks.LearningRateScheduler(get_lr)
+    return tf.keras.callbacks.LearningRateScheduler(get_lr)

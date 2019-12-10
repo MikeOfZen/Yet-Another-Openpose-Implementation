@@ -1,14 +1,11 @@
-#from config import *
-import coco_helper as ch
 from IPython.display import Image, display
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.colors
-import tensorflow as tf
 
-def show_by_id(id):
-    """use to show a single image from the databse by its id"""
-    display(Image(filename=ch.id_to_filename(id)))
+# def show_by_id(id):
+#     """use to show a single image from the databse by its id"""
+#     display(Image(filename=ch.id_to_filename(id)))
 
 # def image_by_id(id,resize=True):
 #     """returns an array of the image"""

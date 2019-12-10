@@ -1,11 +1,22 @@
+TPU_MODE=True
+
+BATCH_SIZE=128
+
 TPU_IP = '10.0.3.2'
 
 GCS_TFRECORDS_BUCKETNAME="datasets_bucket_a"
+ROOT_TFRECORDS_PATH= "gs://"+GCS_TFRECORDS_BUCKETNAME
+TRAIN_TFRECORDS= ROOT_TFRECORDS_PATH + "/training"
+VALID_TFRECORDS= ROOT_TFRECORDS_PATH + "/validation"
 
-#this will override regular config
+
 RESULTS_BUCKETNAME= "dl_training_results"
-TENSORBOARD_PATH='gs://dl_training_results/tensorboard/'
-CHECKPOINTS_DIR="checkpoints"
-CHECKPOINTS_PATH='gs://dl_training_results/checkpoints/'
+RESULTS_ROOT="gs://"+RESULTS_BUCKETNAME
 
-MODELS_PATH="gs://dl_training_results/models/"
+TENSORBOARD_PATH=RESULTS_ROOT+"/tensorboard"
+CHECKPOINTS_DIR="checkpoints"
+CHECKPOINTS_PATH=RESULTS_ROOT+"/checkpoints"
+MODELS_PATH=RESULTS_ROOT+"/models"
+
+
+

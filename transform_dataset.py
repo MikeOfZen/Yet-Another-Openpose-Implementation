@@ -244,6 +244,6 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, c
             writer.write(example)
 
 if __name__ == "__main__":
-    import config as cfg
-    coco_to_TFrecords(cfg.TRAIN_ANNOTATIONS_PATH, cfg.TRANSFORMED_TRAIN_ANNOTATIONS_PATH,cfg)
-    coco_to_TFrecords(cfg.VALIDATION_ANNOTATIONS_PATH, cfg.TRANSFORMED_VALIDATION_ANNOTATIONS_PATH,cfg)
+    import default_config as cfg
+    coco_to_TFrecords(cfg.TRAIN_ANNS, cfg.TRAIN_TFRECORDS, cfg)
+    coco_to_TFrecords(cfg.VALID_ANNS, cfg.VALID_TFRECORDS, cfg)

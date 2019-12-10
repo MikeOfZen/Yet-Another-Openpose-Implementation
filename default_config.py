@@ -2,22 +2,22 @@ from os import sep
 import numpy as np
 from keypoints_config import *
 
+TPU_MODE=False
 #Training Mode
-TPU_MODE=True
-INCLUDE_MASK=True 
+INCLUDE_MASK=True
 ASK_FOR_CHECKPOINTS=True
-RUN_NAME="I_think_I_figure_it_out_l2"
+RUN_NAME=""
 
 #Definitions for COCO 2017 dataset
 DATASET_PATH="." + sep + "dataset"
 IMAGES_PATH= DATASET_PATH + sep + "images"
-TRAIN_ANNOTATIONS_PATH= DATASET_PATH + sep + "annotations" + sep + "person_keypoints_train2017.json"
-VALIDATION_ANNOTATIONS_PATH= DATASET_PATH + sep + "annotations" + sep + "person_keypoints_val2017.json"
+TRAIN_ANNS= DATASET_PATH + sep + "annotations" + sep + "person_keypoints_train2017.json"
+VALID_ANNS= DATASET_PATH + sep + "annotations" + sep + "person_keypoints_val2017.json"
 
 #will be used as output files
-TRANSFORMED_ANNOTATIONS_PATH="." + sep + "dataset" + sep + "TFrecords" + sep + ""
-TRANSFORMED_TRAIN_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"training"
-TRANSFORMED_VALIDATION_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"validation"
+ROOT_TFRECORDS_PATH= "." + sep + "dataset" + sep + "TFrecords" + sep
+TRAIN_TFRECORDS= ROOT_TFRECORDS_PATH + "training"
+VALID_TFRECORDS= ROOT_TFRECORDS_PATH + "validation"
 
 #Dataset reference values
 DATASET_SIZE=56000 #exact size not critical
@@ -46,16 +46,13 @@ KPT_HEATMAP_GAUSSIAN_SIGMA_SQ=0.02 #used for the size of the gaussian spot for e
 PAF_GAUSSIAN_SIGMA_SQ=0.0015 #similiar to joint width, but works on gaussian width,tradeoff between model certainty and number of persons that can be discriminated in a frame
 
 #dataset settings
-SHUFFLE=True  
+SHUFFLE=True
 PREFETCH=10  #size of prefetch size, 0 to disable
-CACHE=True  #depends on available memory size, around 20gb required for both cache and graph 
+CACHE=True  #depends on available memory size, around 20gb required for both cache and graph
 
 BATCH_SIZE=2  #for use when on cpu for development, if on GPU, can safely increase
-if TPU_MODE:
-    BATCH_SIZE=128  #for the size of the dataset this is optimizied for tpuv2-8 node. lower this if getting OOM or tpu crashes
-
-
 STEPS_PER_EPOCH=int(DATASET_SIZE/BATCH_SIZE)
+
 
 #Training settings
 TRAINING_EPOCHS=100
@@ -71,12 +68,8 @@ LEARNING_RATE_SCHEDUELE[100:]=0.3
 LEARNING_RATE_SCHEDUELE*=BASE_LEARNING_RATE
 
 
-RESULTS_ROOT="/home/michael_zl_prime/training/"
-TENSORBOARD_PATH=RESULTS_ROOT + sep +"tensorboard"+ sep #this will get overriden by tpu_config is used
-CHECKPOINTS_PATH=RESULTS_ROOT+ sep +"checkpoints"+ sep #this will get overriden by tpu_config is used
-MODELS_PATH=RESULTS_ROOT + sep + "models"+ sep
+RESULTS_ROOT="/home/michael_zl_prime/training"
+TENSORBOARD_PATH=RESULTS_ROOT + sep +"tensorboard" #this will get overriden by tpu_config is used
+CHECKPOINTS_PATH=RESULTS_ROOT+ sep +"checkpoints" #this will get overriden by tpu_config is used
+MODELS_PATH=RESULTS_ROOT + sep + "models"
 
-
-
-if TPU_MODE:
-    from tpu_training.config_tpu import *

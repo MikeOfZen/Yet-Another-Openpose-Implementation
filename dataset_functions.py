@@ -1,7 +1,19 @@
 import tensorflow as tf
 
-class TFrecordParser:
-    def __init__(self):
+class DatasetTransformer():
+    def __init__(self,config):
+        self.INCLUDE_MASK=config.INCLUDE_MASK
+        self.LABEL_HEIGHT=config.LABEL_HEIGHT
+        self.LABEL_WIDTH=config.LABEL_WIDTH
+        self.IMAGE_SIZE=config.IMAGE_SIZE
+
+        self.PAF_GAUSSIAN_SIGMA_SQ=config.PAF_GAUSSIAN_SIGMA_SQ
+        self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ=config.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ
+
+        self.PAF_NUM_FILTERS=config.PAF_NUM_FILTERS
+        self.HEATMAP_NUM_FILTERS=config.HEATMAP_NUM_FILTERS
+
+        #for parsing TFrecords files
         self.feature_description = {
                 'id'       : tf.io.FixedLenFeature([1], tf.int64),
                 'image_raw': tf.io.FixedLenFeature([], tf.string),
@@ -10,6 +22,13 @@ class TFrecordParser:
                 'joints'   : tf.io.FixedLenFeature([], tf.string),
                 'mask'     : tf.io.FixedLenFeature([], tf.string)
                 }
+        self.init_grid()
+
+    def init_grid(self):
+        y_grid = tf.linspace(0.0, 1.0, self.LABEL_HEIGHT)
+        x_grid = tf.linspace(0.0, 1.0, self.LABEL_WIDTH)
+        yy, xx = tf.meshgrid(y_grid, x_grid, indexing='ij')  # indexing is a must, otherwise, it's just bizzare!
+        self.grid = tf.stack((yy, xx), axis=-1)
 
     @tf.function
     def read_tfrecord(self, serialized_example):
@@ -28,24 +47,6 @@ class TFrecordParser:
         joints = tf.RaggedTensor.from_tensor(joints)
 
         return {"id": idd, "image_raw": image_raw, "size": size, "kpts": kpts, "joints": joints, "mask": mask}
-
-
-class LabelTransformer():
-    def __init__(self,config):
-        self.LABEL_HEIGHT=config.LABEL_HEIGHT
-        self.LABEL_WIDTH=config.LABEL_WIDTH
-        self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ=config.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ
-        self.HEATMAP_NUM_FILTERS=config.HEATMAP_NUM_FILTERS
-        self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ=config.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ
-        self.PAF_NUM_FILTERS=config.PAF_NUM_FILTERS
-        self.PAF_GAUSSIAN_SIGMA_SQ=config.PAF_GAUSSIAN_SIGMA_SQ
-        self.IMAGE_SIZE=config.IMAGE_SIZE
-        self.INCLUDE_MASK=config.INCLUDE_MASK
-
-        y_grid = tf.linspace(0.0, 1.0, self.LABEL_HEIGHT)
-        x_grid = tf.linspace(0.0, 1.0, self.LABEL_WIDTH)
-        yy, xx = tf.meshgrid(y_grid, x_grid, indexing='ij')  # indexing is a must, otherwise, it's just bizzare!
-        self.grid = tf.stack((yy, xx), axis=-1)
 
     @tf.function
     def keypoints_spots_vloop(self, kpts_tensor):

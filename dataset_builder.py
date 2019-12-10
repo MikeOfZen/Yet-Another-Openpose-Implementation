@@ -1,5 +1,4 @@
 import tensorflow as tf
-import os
 
 import dataset_functions
 
@@ -33,33 +32,15 @@ def get_tfrecord_filenames(path:str,config):
 #gcs path gs://datasets_bucket_a/training-002.tfrecords
 #glob path TRANSFORMED_TRAIN_ANNOTATIONS_PATH + "-*.tfrecords"
 
-def build_validation_ds(tfrecord_filenames:list,labels_placement_function,config)->tf.data.Dataset:
-    """Generate validation dataset from TFrecord file locations
-    :param tfrecord_files should be list of correct TFrecord filename, either local or remote (gcs, with gs:// prefix)"""
-    # TFrecord files to raw format
-    TF_parser = dataset_functions.TFrecordParser()
-    ds = tf.data.TFRecordDataset(tfrecord_filenames)  # numf reads can be put here, but I don't think I/O is the bottleneck
-    # raw format to imgs,tensors(coords kpts)
-    ds = ds.map(TF_parser.read_tfrecord)
-
-    if config.CACHE: ds = ds.cache()
-
-    # imgs,tensors to label_tensors (46,46,17/38)
-    ds = ds.map(dataset_functions.make_label_tensors)
-    # imgs,label_tensors arrange for model outputs
-    ds = ds.map(labels_placement_function)
-    ds = ds.batch(config.BATCH_SIZE)
-    return ds
-
 def build_training_ds(tfrecord_filenames:list,labels_placement_function,config)->tf.data.Dataset:
     """Generate training dataset from TFrecord file locations
     :param tfrecord_files should be list of correct TFrecord filename, either local or remote (gcs, with gs:// prefix)"""
     # TFrecord files to raw format
-    TF_parser = dataset_functions.TFrecordParser()
+    dataset_transformer = dataset_functions.DatasetTransformer()
     ds = tf.data.TFRecordDataset(tfrecord_filenames)  # numf reads can be put here, but I don't think I/O is the bottleneck
 
     # raw format to imgs,tensors(coords kpts)
-    ds = ds.map(TF_parser.read_tfrecord)
+    ds = ds.map(dataset_transformer.read_tfrecord)
 
     # cache  ,caching is here before decompressing jpgs and label tensors (should be ~9GB) , (full dataset should be ~90, cache later if RAM aviable)
     if config.CACHE: ds = ds.cache()
@@ -68,11 +49,30 @@ def build_training_ds(tfrecord_filenames:list,labels_placement_function,config)-
     # Augmentation should be here, to operate on smaller tensors
 
     # imgs,tensors to label_tensors (46,46,17/38)
-    ds = ds.map(dataset_functions.make_label_tensors)
+    ds = ds.map(dataset_transformer.make_label_tensors)
     # imgs,label_tensors arrange for model outputs
     ds = ds.map(labels_placement_function)
 
     ds = ds.batch(config.BATCH_SIZE)
     ds = ds.repeat()
     if config.PREFETCH: ds = ds.prefetch(config.PREFETCH)
+    return ds
+
+def build_validation_ds(tfrecord_filenames:list,labels_placement_function,config)->tf.data.Dataset:
+    """Generate validation dataset from TFrecord file locations
+    :param tfrecord_files should be list of correct TFrecord filename, either local or remote (gcs, with gs:// prefix)"""
+    # TFrecord files to raw format
+    dataset_transformer = dataset_functions.DatasetTransformer()
+
+    ds = tf.data.TFRecordDataset(tfrecord_filenames)  # numf reads can be put here, but I don't think I/O is the bottleneck
+    # raw format to imgs,tensors(coords kpts)
+    ds = ds.map(dataset_transformer.read_tfrecord)
+
+    if config.CACHE: ds = ds.cache()
+
+    # imgs,tensors to label_tensors (46,46,17/38)
+    ds = ds.map(dataset_transformer.make_label_tensors)
+    # imgs,label_tensors arrange for model outputs
+    ds = ds.map(labels_placement_function)
+    ds = ds.batch(config.BATCH_SIZE)
     return ds
