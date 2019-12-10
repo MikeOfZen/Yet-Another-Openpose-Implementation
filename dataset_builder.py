@@ -22,7 +22,7 @@ def get_tfrecord_filenames(path:str,config):
         import glob
         def _get_tfrecord_filenames(path:str):
             print("Retrieving TFrecords from:",path)
-            tfrecord_files = glob.glob(path)
+            tfrecord_files = glob.glob(path+"*")
             tfrecord_files.sort()
             if not tfrecord_files:
                 raise ValueError("Couldn't find TFrecord files at:"+path)
