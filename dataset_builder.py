@@ -33,9 +33,6 @@ def get_tfrecord_filenames(path: str, config):
     return _get_tfrecord_filenames(path)
 
 
-# gcs path gs://datasets_bucket_a/training-002.tfrecords
-# glob path TRANSFORMED_TRAIN_ANNOTATIONS_PATH + "-*.tfrecords"
-
 def build_training_ds(tfrecord_filenames: list, labels_placement_function, config) -> tf.data.Dataset:
     """    :param config: effective config dict
     :param labels_placement_function: a model function, which applies the last stage of transformation to the dataset, to distribute the
@@ -54,10 +51,9 @@ def build_training_ds(tfrecord_filenames: list, labels_placement_function, confi
 
     # Augmentation should be here, to operate on smaller tensors
 
-    # imgs,tensors to label_tensors (46,46,17/38)
-    ds = ds.map(dataset_transformer.make_label_tensors)
-    # imgs,label_tensors arrange for model outputs
-    ds = ds.map(labels_placement_function)
+    ds = ds.map(dataset_transformer.open_image) #jpeg to array
+    ds = ds.map(dataset_transformer.make_label_tensors) # tensors to label_tensors (46,46,17/38)
+    ds = ds.map(labels_placement_function) # imgs,label_tensors arrange for model outputs
 
     ds = ds.batch(config.BATCH_SIZE)
     ds = ds.repeat()
@@ -81,9 +77,9 @@ def build_validation_ds(tfrecord_filenames: list, labels_placement_function, con
 
     if config.CACHE: ds = ds.cache()
 
-    # imgs,tensors to label_tensors (46,46,17/38)
-    ds = ds.map(dataset_transformer.make_label_tensors)
-    # imgs,label_tensors arrange for model outputs
-    ds = ds.map(labels_placement_function)
+    ds = ds.map(dataset_transformer.open_image) #jpeg to array
+    ds = ds.map(dataset_transformer.make_label_tensors) # tensors to label_tensors (46,46,17/38)
+    ds = ds.map(labels_placement_function) # imgs,label_tensors arrange for model outputs
+
     ds = ds.batch(config.BATCH_SIZE)
     return ds
