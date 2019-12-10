@@ -1,24 +1,26 @@
 import tensorflow as tf
 from tpu_training.TPU_config import *
 
+
 def connect_to_tpu(tpu_address):
     return tf.distribute.cluster_resolver.TPUClusterResolver(tpu=tpu_address)
+
 
 def init_tpu():
     print("Trying to connect to a TPU node")
 
     print(("\n!!!MAKE SURE THE TPU ADDRESS IS CORRECT!!\n"
-    "1.ip must be correct\n"
-    "2.tpu must be turned on\n"
-    "3.version must be 'nightly-2.x'\n"
-    "4.tpu must be reachable (check with gce netowrking/connectivity test)\n"
-    "if not this will hang!\n"),flush=True)
+           "1.ip must be correct\n"
+           "2.tpu must be turned on\n"
+           "3.version must be 'nightly-2.x'\n"
+           "4.tpu must be reachable (check with gce netowrking/connectivity test)\n"
+           "if not this will hang!\n"), flush=True)
 
     tpu_address = 'grpc://' + TPU_IP + ':8470'
-    print("Trying to connect to:",tpu_address,flush=True)
-    resolver=connect_to_tpu(tpu_address)
+    print("Trying to connect to:", tpu_address, flush=True)
+    resolver = connect_to_tpu(tpu_address)
 
     tf.config.experimental_connect_to_cluster(resolver)
     tf.tpu.experimental.initialize_tpu_system(resolver)
     strategy = tf.distribute.experimental.TPUStrategy(resolver)
-    return strategy,resolver
+    return strategy, resolver

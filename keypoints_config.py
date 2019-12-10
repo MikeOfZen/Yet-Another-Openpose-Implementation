@@ -9,7 +9,7 @@ KEYPOINTS_DEF=(
     {"name":'Rwrist'       ,"ds_idxs":10           },  #4
     {"name":'Lshoulder'    ,"ds_idxs":5            },  #5
     {"name":'Lelbow'       ,"ds_idxs":7            },  #6
-    {"name":'Lwrist'       ,"ds_idxs":9           },  #7
+    {"name":'Lwrist'       ,"ds_idxs":9           },   #7
     {"name":'Rhip'         ,"ds_idxs":12           },  #8
     {"name":'Rknee'        ,"ds_idxs":14           },  #9
     {"name":'Rankle'       ,"ds_idxs":16           },  #10

@@ -22,6 +22,7 @@ def get_tfrecord_filenames(path: str, config):
             return tfrecord_files
     else:
         import glob
+
         def _get_tfrecord_filenames(path: str):
             print("Retrieving TFrecords from:", path)
             tfrecord_files = glob.glob(path + "*")

@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 class AnalogRecall(tf.keras.metrics.Metric):
     """This metric returns the overlap of the true gaussian 'islands' and the predicted ones"""
 
@@ -26,20 +27,22 @@ class AnalogRecall(tf.keras.metrics.Metric):
     def result(self):
         return self.mean
 
+
 class MaskedMeanSquaredError(tf.keras.losses.MeanSquaredError):
     def __call__(self, true, pred):
-        mask=true[...,-1:] #split the concatenated input
-        true=true[...,:-1]
-        empty_mask=pred[...,-1:] #coming from the model, required to silence keras about shape mismatch
-        pred=pred[...,:-1]
+        mask = true[..., -1:]  # split the concatenated input
+        true = true[..., :-1]
+        #empty_mask = pred[..., -1:]  # coming from the model, required to silence keras about shape mismatch
+        pred = pred[..., :-1]
 
-        return super(MaskedMeanSquaredError, self).__call__(true,pred,mask)
+        return super(MaskedMeanSquaredError, self).__call__(true, pred, mask)
+
 
 class MaskedMeanAbsoluteError(tf.keras.losses.MeanAbsoluteError):
     def __call__(self, true, pred):
-        mask=true[...,-1:] #split the concatenated input
-        true=true[...,:-1]
-        empty_mask=pred[...,-1:] #coming from the model, required to silence keras about shape mismatch
-        pred=pred[...,:-1]
+        mask = true[..., -1:]  # split the concatenated input
+        true = true[..., :-1]
+        #empty_mask = pred[..., -1:]  # coming from the model, required to silence keras about shape mismatch
+        pred = pred[..., :-1]
 
-        return super(MaskedMeanAbsoluteError, self).__call__(true,pred,mask)
+        return super(MaskedMeanAbsoluteError, self).__call__(true, pred, mask)

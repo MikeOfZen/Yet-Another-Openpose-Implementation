@@ -1,19 +1,20 @@
 import tensorflow as tf
 
+
 class DatasetTransformer():
-    def __init__(self,config):
-        self.INCLUDE_MASK=config.INCLUDE_MASK
-        self.LABEL_HEIGHT=config.LABEL_HEIGHT
-        self.LABEL_WIDTH=config.LABEL_WIDTH
-        self.IMAGE_SIZE=config.IMAGE_SIZE
+    def __init__(self, config):
+        self.INCLUDE_MASK = config.INCLUDE_MASK
+        self.LABEL_HEIGHT = config.LABEL_HEIGHT
+        self.LABEL_WIDTH = config.LABEL_WIDTH
+        self.IMAGE_SIZE = config.IMAGE_SIZE
 
-        self.PAF_GAUSSIAN_SIGMA_SQ=config.PAF_GAUSSIAN_SIGMA_SQ
-        self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ=config.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ
+        self.PAF_GAUSSIAN_SIGMA_SQ = config.PAF_GAUSSIAN_SIGMA_SQ
+        self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ = config.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ
 
-        self.PAF_NUM_FILTERS=config.PAF_NUM_FILTERS
-        self.HEATMAP_NUM_FILTERS=config.HEATMAP_NUM_FILTERS
+        self.PAF_NUM_FILTERS = config.PAF_NUM_FILTERS
+        self.HEATMAP_NUM_FILTERS = config.HEATMAP_NUM_FILTERS
 
-        #for parsing TFrecords files
+        # for parsing TFrecords files
         self.feature_description = {
                 'id'       : tf.io.FixedLenFeature([1], tf.int64),
                 'image_raw': tf.io.FixedLenFeature([], tf.string),
@@ -127,7 +128,7 @@ class DatasetTransformer():
         # this must be executed in the packing order, to produce the layers in the right order
         result = tf.stack(all_pafs)
 
-        result = tf.where(abs(result) < 0.001, 0.0, result) #stabilize numerically
+        result = tf.where(abs(result) < 0.001, 0.0, result)  # stabilize numerically
 
         # must transpose to fit the label (NJOINTS,LABEL_HEIGHT, LABEL_WIDTH, 2) to
         # [LABEL_HEIGHT, LABEL_WIDTH,PAF_NUM_FILTERS=NJOINTS*2]
@@ -157,7 +158,7 @@ class DatasetTransformer():
         :return a tensor of shape (LABEL_HEIGHT, LABEL_WIDTH, 2)
         """
         jpts = tf.reshape(joint[0:4], (2, 2))  # reshape to ((x1,y1),(x2,y2))
-        if joint[4] == tf.constant(0.0) or tf.reduce_all(jpts[1] - jpts[0]==0.0):
+        if joint[4] == tf.constant(0.0) or tf.reduce_all(jpts[1] - jpts[0] == 0.0):
             return tf.zeros((self.LABEL_HEIGHT, self.LABEL_WIDTH, 2), dtype=tf.float32)  # in case of empty joint
         else:
             # this follows the OpenPose paper of generating the PAFs
@@ -191,7 +192,7 @@ class DatasetTransformer():
             return result
 
     @tf.function
-    def make_label_tensors(self,elem):
+    def make_label_tensors(self, elem):
         """Transforms a dict data element:
         1.Read jpg to tensor
         1.1 Resize img to correct size for network
@@ -217,8 +218,8 @@ class DatasetTransformer():
             mask = tf.ensure_shape(mask, ([self.LABEL_HEIGHT, self.LABEL_WIDTH]))
             mask = tf.expand_dims(mask, axis=-1)  # required to concat
 
-            kpt_tr = tf.concat([kpt_tr,mask], axis=-1)  # add mask as zero channel to inputs
-            paf_tr = tf.concat([paf_tr,mask], axis=-1)
+            kpt_tr = tf.concat([kpt_tr, mask], axis=-1)  # add mask as zero channel to inputs
+            paf_tr = tf.concat([paf_tr, mask], axis=-1)
             new_elem["mask"] = mask
 
         new_elem["id"] = idd
@@ -226,7 +227,6 @@ class DatasetTransformer():
         new_elem["kpts"] = kpt_tr
         new_elem["image"] = image
         return new_elem
-
 
 # @tf.function
 # def place_training_labels(elem):
