@@ -1,5 +1,6 @@
 from os import sep
 
+STORAGE='local'
 # Definitions for COCO 2017 dataset
 DATASET_PATH = "." + sep + "dataset"
 IMAGES_PATH = DATASET_PATH + sep + "images"
