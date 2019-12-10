@@ -193,13 +193,18 @@ class DatasetTransformer():
 
     @tf.function
     def open_image(self, elem):
-        image_raw = elem.pop("image_raw")
+
+        image_raw = elem["image_raw"]
         image = tf.image.decode_jpeg(image_raw, channels=3)
         image = tf.image.convert_image_dtype(image, dtype=tf.float32)
         image = tf.image.resize(image, self.IMAGE_SIZE)
+
         new_elem = {}
         new_elem.update(elem)
+        new_elem.pop("image_raw")
+
         new_elem["image"] = image
+        return new_elem
 
     @tf.function
     def make_label_tensors(self, elem):
@@ -212,8 +217,8 @@ class DatasetTransformer():
         outputs a tuple data element"""
 
         # idd = elem['id']
-        kpts = elem.pop('kpts')
-        joints = elem.pop('joints')
+        kpts = elem['kpts']
+        joints = elem['joints']
         kpt_tr = self.keypoints_spots_vmapfn(kpts)
         paf_tr = self.joints_PAFs(joints)
 
@@ -224,6 +229,8 @@ class DatasetTransformer():
 
         new_elem = {}
         new_elem.update(elem)  # if need to pass something through
+        new_elem.pop('kpts')
+        new_elem.pop('joints')
 
         if self.INCLUDE_MASK:  # the mask is being stacked as the first element of both the input of the model and the true value from the dataset
             mask = elem['mask']
@@ -233,10 +240,9 @@ class DatasetTransformer():
             kpt_tr = tf.concat([kpt_tr, mask], axis=-1)  # add mask as zero channel to inputs
             paf_tr = tf.concat([paf_tr, mask], axis=-1)
 
-        # new_elem["id"] = idd
         new_elem["paf"] = paf_tr
         new_elem["kpts"] = kpt_tr
-        # new_elem["image"] = image
+
         return new_elem
 
 # @tf.function
