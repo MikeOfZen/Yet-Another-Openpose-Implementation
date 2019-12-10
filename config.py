@@ -6,6 +6,7 @@ from keypoints_config import *
 TPU_MODE=True
 INCLUDE_MASK=True 
 ASK_FOR_CHECKPOINTS=True
+RUN_NAME="I_think_I_figure_it_out_l2"
 
 #Definitions for COCO 2017 dataset
 DATASET_PATH="." + sep + "dataset"
@@ -25,8 +26,8 @@ DATASET_VAL_SIZE=2500
 #this determines the size images will be resized to, and the size of the labels vreated
 IMAGE_WIDTH=368
 IMAGE_HEIGHT=368
-IMAGE_SIZE=(IMAGE_HEIGHT,IMAGE_WIDTH)
-LABEL_HEIGHT=46 #this stems from the model label output size
+IMAGE_SIZE=(IMAGE_HEIGHT,IMAGE_WIDTH) #for convinience
+LABEL_HEIGHT=46 #this stems from the model label output size, cannot be configured!!! must be derived from model.
 LABEL_WIDTH=46 #same
 
 #model settings
@@ -40,7 +41,7 @@ BATCH_NORMALIZATION_ON=False
 KPT_HEATMAP_GAUSSIAN_SIGMA_SQ=0.02 #used for the size of the gaussian spot for each keypoint
 #JOINT_WIDTH=0.02  #used for the width of the vector field generated for each joint as a PAF, the unit is relative to image size ie 0..1
                     #for lower resolution, a value too low (~0.005) here will make the vectors too sparse
-PAF_GAUSSIAN_SIGMA_SQ=0.003 #similiar to joint width, but works on gaussian width,tradeoff between model certainty and number of persons that can be discriminated in a frame
+PAF_GAUSSIAN_SIGMA_SQ=0.0015 #similiar to joint width, but works on gaussian width,tradeoff between model certainty and number of persons that can be discriminated in a frame
 
 #dataset settings
 SHUFFLE=True  
@@ -60,18 +61,18 @@ TRAINING_EPOCHS=100
 #adam_learning_rate=0.001  #for reference
 BASE_LEARNING_RATE=0.001
 LEARNING_RATE_SCHEDUELE=np.zeros(1000)
-LEARNING_RATE_SCHEDUELE[:3]=0.5
-LEARNING_RATE_SCHEDUELE[3:20]=0.5
-LEARNING_RATE_SCHEDUELE[20:40]=0.5
+LEARNING_RATE_SCHEDUELE[:3]=1
+LEARNING_RATE_SCHEDUELE[3:20]=1
+LEARNING_RATE_SCHEDUELE[20:40]=1
 LEARNING_RATE_SCHEDUELE[40:100]=0.5
 LEARNING_RATE_SCHEDUELE[100:]=0.3
 LEARNING_RATE_SCHEDUELE*=BASE_LEARNING_RATE
 
 
 RESULTS_ROOT="/home/michael_zl_prime/training/"
-TENSORBOARD_PATH=RESULTS_ROOT + sep +"tensorboard" #this will get overriden by tpu_config is used
-CHECKPOINTS_PATH=RESULTS_ROOT+ sep +"checkpoints" #this will get overriden by tpu_config is used
-MODELS_PATH=RESULTS_ROOT + sep + "models"
+TENSORBOARD_PATH=RESULTS_ROOT + sep +"tensorboard"+ sep #this will get overriden by tpu_config is used
+CHECKPOINTS_PATH=RESULTS_ROOT+ sep +"checkpoints"+ sep #this will get overriden by tpu_config is used
+MODELS_PATH=RESULTS_ROOT + sep + "models"+ sep
 
 
 

@@ -42,8 +42,8 @@ class ModelMaker():
     def _make_stage0(self, x):
         x = tf.keras.layers.Conv2D(512, 1, padding="same", activation='relu', name="stage0_final_conv1")(x)
         x = tf.keras.layers.Conv2D(512, 1, padding="same", activation='relu', name="stage0_final_conv2")(x)
-        x = tf.keras.layers.Conv2D(256, 1, padding="same", activation='relu', name="stage0_final_conv3")(x)
-        x = tf.keras.layers.Conv2D(128, 1, padding="same", activation='relu', name="stage0_final_conv4")(x)
+        x = tf.keras.layers.Conv2D(512, 1, padding="same", activation='relu', name="stage0_final_conv3")(x)
+        x = tf.keras.layers.Conv2D(512, 1, padding="same", activation='relu', name="stage0_final_conv4")(x)
         return x
 
     def _make_conv_block(self, x, conv_block_filters, name):
@@ -95,21 +95,24 @@ class ModelMaker():
         stage0_output = self._make_stage0(stage00_output)
         # PAF stages
         # stage 1
-        stage1_output = self._make_stageI([stage0_output], "stage1paf", 96, PAF_NUM_FILTERS)
+        s1paf_output = self._make_stageI([stage0_output], "s1paf", 128, PAF_NUM_FILTERS)
+        s1kpt_output = self._make_stageI([stage0_output], "s1kpt", 128, HEATMAP_NUM_FILTERS)
         # stage 2
-        stage2_output = self._make_stageI([stage1_output, stage0_output], "stage2paf", 128, PAF_NUM_FILTERS)
+        s2paf_output = self._make_stageI([stage0_output,s1paf_output,s1kpt_output], "s2paf", 128, PAF_NUM_FILTERS)
+        s2kpt_output = self._make_stageI([stage0_output,s1paf_output,s1kpt_output], "s2kpt", 128, HEATMAP_NUM_FILTERS)
         # stage 3
-        stage3_output = self._make_stageI([stage2_output, stage0_output], "stage3paf", 128, PAF_NUM_FILTERS)
+        s3paf_output = self._make_stageI([stage0_output,s2paf_output,s2kpt_output], "s3paf", 128, PAF_NUM_FILTERS)
+        s3kpt_output = self._make_stageI([stage0_output,s2paf_output,s2kpt_output], "s3kpt", 128, HEATMAP_NUM_FILTERS)        
         # stage 4
-        stage4_output = self._make_stageI([stage3_output, stage0_output], "stage4paf", 128, PAF_NUM_FILTERS)
-        # keypoint heatmap stages
-        # stage5
-        stage5_output = self._make_stageI([stage4_output, stage0_output], "stage5heatmap", 96, HEATMAP_NUM_FILTERS)
-        # stage6
-        stage6_output = self._make_stageI([stage5_output, stage4_output, stage0_output], "stage6heatmap", 128, HEATMAP_NUM_FILTERS)
-
+        s4paf_output = self._make_stageI([stage0_output,s3paf_output,s3kpt_output], "s4paf", 128, PAF_NUM_FILTERS)
+        s4kpt_output = self._make_stageI([stage0_output,s3paf_output,s3kpt_output], "s4kpt", 128, HEATMAP_NUM_FILTERS)             
+        
+        
         training_inputs=input_tensor
-        training_outputs = [stage1_output, stage2_output, stage3_output, stage4_output, stage5_output, stage6_output]
+        training_outputs = [s1paf_output,s1kpt_output,
+                           s2paf_output,s2kpt_output,
+                           s3paf_output,s3kpt_output,
+                           s4paf_output,s4kpt_output]
 
         if INCLUDE_MASK:  #this is used to pass the mask directly to the loss function through the model
             mask_input= tf.keras.layers.Input(shape=MASK_SHAPE)
@@ -118,7 +121,25 @@ class ModelMaker():
 
         train_model = tf.keras.Model(inputs=training_inputs, outputs=training_outputs)
 
-        test_outputs = [stage4_output, stage6_output]
+        test_outputs = [s4paf_output,s4kpt_output]
         test_model = tf.keras.Model(inputs=input_tensor, outputs=test_outputs)
 
         return train_model,test_model
+   
+@tf.function
+def place_training_labels(elem):
+    """Distributes labels into the correct configuration for the model, ie 4 PAF stage, 2 kpt stages
+    must match the model"""
+    paf_tr = elem['paf']
+    kpt_tr = elem['kpts']
+    image = elem['image']
+
+    if INCLUDE_MASK:
+        inputs = (image,elem['mask'])
+    else:
+        inputs = image
+
+    return inputs, (paf_tr, kpt_tr,
+                    paf_tr, kpt_tr,
+                    paf_tr, kpt_tr,
+                    paf_tr, kpt_tr)  # this should match the model outputs, and is different for each model

@@ -75,7 +75,7 @@ def build_training_ds(tfrecord_filenames:list,labels_placement_function)->tf.dat
 
     # cache  ,caching is here before decompressing jpgs and label tensors (should be ~9GB) , (full dataset should be ~90, cache later if RAM aviable)
     if CACHE: ds = ds.cache()
-    if SHUFFLE: ds = ds.shuffle(100)
+    if SHUFFLE: ds = ds.shuffle(1000)
 
     # Augmentation should be here, to operate on smaller tensors
 
