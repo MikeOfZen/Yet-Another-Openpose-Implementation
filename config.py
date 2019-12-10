@@ -23,6 +23,8 @@ TRANSFORMED_VALIDATION_ANNOTATIONS_PATH=TRANSFORMED_ANNOTATIONS_PATH+"validation
 DATASET_SIZE=56000 #exact size not critical
 DATASET_VAL_SIZE=2500
 
+IMAGES_PER_TFRECORD=1000
+
 #this determines the size images will be resized to, and the size of the labels vreated
 IMAGE_WIDTH=368
 IMAGE_HEIGHT=368

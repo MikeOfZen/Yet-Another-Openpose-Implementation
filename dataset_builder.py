@@ -2,80 +2,68 @@ import tensorflow as tf
 import os
 
 import dataset_functions
-from config import *
 
+def get_tfrecord_filenames(path:str,config):
+    if config.TPU_MODE:
+        from google.cloud import storage
+        def _get_tfrecord_filenames(path:str):
+            assert path.startswith("gs://")
+            print("Retrieving TFrecords from:",path)
 
-if TPU_MODE:
-    from google.cloud import storage
-    from tpu_training.config_tpu import *
+            bucket_name=path.lstrip("gs://").split("/")[0]
+            prefix = "/".join((path.split("/")[3:]))
 
-    gs_prefix = "gs://"
-    def get_tfrecord_filenames(permissive=False):
-        print("Retrieving TFrecords in TPU_mode")
-        train_prefix = TRANSFORMED_TRAIN_ANNOTATIONS_PATH.split(os.sep)[-1]
-        val_prefix = TRANSFORMED_VALIDATION_ANNOTATIONS_PATH.split(os.sep)[-1]
+            storage_client = storage.Client()
+            blobs = storage_client.list_blobs(bucket_name, prefix=prefix) # must have apropriate authenitication to work
+            if not blobs:
+                raise ValueError("Couldn't find training TFrecord files at:"+bucket_name+"/"+prefix)
+            tfrecord_files = ["gs://" + bucket_name + '/' + blob.name for blob in blobs]
+            return  tfrecord_files
+    else:
+        import glob
+        def _get_tfrecord_filenames(path:str):
+            print("Retrieving TFrecords from:",path)
+            tfrecord_files = glob.glob(path)
+            tfrecord_files.sort()
+            if not tfrecord_files:
+                raise ValueError("Couldn't find TFrecord files at:"+path)
+            return tfrecord_files
+    return _get_tfrecord_filenames(path)
 
-        storage_client = storage.Client()
-        # must have apropriate authenitication to work
-        train_blobs = storage_client.list_blobs(GCS_TFRECORDS_BUCKETNAME, prefix=train_prefix)
-        val_blobs = storage_client.list_blobs(GCS_TFRECORDS_BUCKETNAME, prefix=val_prefix)
+#gcs path gs://datasets_bucket_a/training-002.tfrecords
+#glob path TRANSFORMED_TRAIN_ANNOTATIONS_PATH + "-*.tfrecords"
 
-        if not permissive:
-            if not train_blobs:
-                raise ValueError("Couldn't find training TFrecord files at:"+GCS_TFRECORDS_BUCKETNAME+"/"+train_prefix)
-            if not val_blobs:
-                raise ValueError("Couldn't find validation TFrecord files at:"+GCS_TFRECORDS_BUCKETNAME+"/"+train_prefix)
-
-        tfrecord_files_train = [gs_prefix + GCS_TFRECORDS_BUCKETNAME + '/' + blob.name for blob in train_blobs]
-        tfrecord_files_val = [gs_prefix + GCS_TFRECORDS_BUCKETNAME + '/' + blob.name for blob in val_blobs]
-
-        return  tfrecord_files_train,tfrecord_files_val
-else:
-    import glob
-    def get_tfrecord_filenames(permissive=False):
-        print("Retrieving TFrecords in local mode")
-        tfrecord_files_train = glob.glob(TRANSFORMED_TRAIN_ANNOTATIONS_PATH + "-*.tfrecords")
-        tfrecord_files_train.sort()
-        tfrecord_files_val = glob.glob(TRANSFORMED_VALIDATION_ANNOTATIONS_PATH+ "-*.tfrecords")
-        tfrecord_files_val.sort()
-
-        if not permissive:
-            if not tfrecord_files_val:
-                raise ValueError("Couldn't find training TFrecord files at:"+TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
-            if not tfrecord_files_train:
-                raise ValueError("Couldn't find validation TFrecord files at:"+TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
-        return tfrecord_files_train,tfrecord_files_val
-
-TF_parser = dataset_functions.TFrecordParser()
-def build_validation_ds(tfrecord_filenames:list,labels_placement_function)->tf.data.Dataset:
+def build_validation_ds(tfrecord_filenames:list,labels_placement_function,config)->tf.data.Dataset:
     """Generate validation dataset from TFrecord file locations
     :param tfrecord_files should be list of correct TFrecord filename, either local or remote (gcs, with gs:// prefix)"""
     # TFrecord files to raw format
+    TF_parser = dataset_functions.TFrecordParser()
     ds = tf.data.TFRecordDataset(tfrecord_filenames)  # numf reads can be put here, but I don't think I/O is the bottleneck
     # raw format to imgs,tensors(coords kpts)
     ds = ds.map(TF_parser.read_tfrecord)
 
-    if CACHE: ds = ds.cache()
+    if config.CACHE: ds = ds.cache()
 
     # imgs,tensors to label_tensors (46,46,17/38)
     ds = ds.map(dataset_functions.make_label_tensors)
     # imgs,label_tensors arrange for model outputs
     ds = ds.map(labels_placement_function)
-    ds = ds.batch(BATCH_SIZE)
+    ds = ds.batch(config.BATCH_SIZE)
     return ds
 
-def build_training_ds(tfrecord_filenames:list,labels_placement_function)->tf.data.Dataset:
+def build_training_ds(tfrecord_filenames:list,labels_placement_function,config)->tf.data.Dataset:
     """Generate training dataset from TFrecord file locations
     :param tfrecord_files should be list of correct TFrecord filename, either local or remote (gcs, with gs:// prefix)"""
     # TFrecord files to raw format
+    TF_parser = dataset_functions.TFrecordParser()
     ds = tf.data.TFRecordDataset(tfrecord_filenames)  # numf reads can be put here, but I don't think I/O is the bottleneck
 
     # raw format to imgs,tensors(coords kpts)
     ds = ds.map(TF_parser.read_tfrecord)
 
     # cache  ,caching is here before decompressing jpgs and label tensors (should be ~9GB) , (full dataset should be ~90, cache later if RAM aviable)
-    if CACHE: ds = ds.cache()
-    if SHUFFLE: ds = ds.shuffle(1000)
+    if config.CACHE: ds = ds.cache()
+    if config.SHUFFLE: ds = ds.shuffle(100)
 
     # Augmentation should be here, to operate on smaller tensors
 
@@ -84,7 +72,7 @@ def build_training_ds(tfrecord_filenames:list,labels_placement_function)->tf.dat
     # imgs,label_tensors arrange for model outputs
     ds = ds.map(labels_placement_function)
 
-    ds = ds.batch(BATCH_SIZE)
+    ds = ds.batch(config.BATCH_SIZE)
     ds = ds.repeat()
-    if PREFETCH: ds = ds.prefetch(PREFETCH)
+    if config.PREFETCH: ds = ds.prefetch(config.PREFETCH)
     return ds

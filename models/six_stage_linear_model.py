@@ -70,8 +70,17 @@ class ModelMaker():
 
         x = tf.keras.layers.Conv2D(self.stage_final_nfilters, 1, padding="same", activation='relu', name=name + "_final1conv")(x)
         if BATCH_NORMALIZATION_ON: x = tf.keras.layers.BatchNormalization(name=name + "_finalbn1")(x)
-        x = tf.keras.layers.Conv2D(outputs, 1, padding="same", activation=last_activation, name=name + "_output")(x)   
+        x = tf.keras.layers.Conv2D(outputs, 1, padding="same", activation=last_activation, name=name + "_preoutput")(x)
         return x
+
+    @ staticmethod
+    def rename_outputs(pre_outputs):
+        new_outputs = []
+        for pre_output in pre_outputs:
+            new_outputs.append(
+                    tf.keras.layers.Lambda(lambda x: x, name=pre_output.name.split("_")[0] + "_output")(pre_output)
+                    )
+        return new_outputs
 
     @staticmethod
     def _psd_zero_mask_to_outputs(outputs,mask_input):
@@ -115,13 +124,15 @@ class ModelMaker():
             training_outputs=self._psd_zero_mask_to_outputs(training_outputs,mask_input)
             training_inputs=(input_tensor,mask_input)
 
+        training_outputs = self.rename_outputs(training_outputs)
+
         train_model = tf.keras.Model(inputs=training_inputs, outputs=training_outputs)
 
         test_outputs = [stage4_output, stage6_output]
         test_model = tf.keras.Model(inputs=input_tensor, outputs=test_outputs)
 
         return train_model,test_model
-    
+
 @tf.function
 def place_training_labels(elem):
     """Distributes labels into the correct configuration for the model, ie 4 PAF stage, 2 kpt stages

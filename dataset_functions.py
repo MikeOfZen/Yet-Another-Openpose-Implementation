@@ -1,6 +1,4 @@
-from config import *
 import tensorflow as tf
-
 
 class TFrecordParser:
     def __init__(self):
@@ -11,7 +9,6 @@ class TFrecordParser:
                 'kpts'     : tf.io.FixedLenFeature([], tf.string),
                 'joints'   : tf.io.FixedLenFeature([], tf.string),
                 'mask'     : tf.io.FixedLenFeature([], tf.string)
-
                 }
 
     @tf.function
@@ -34,9 +31,19 @@ class TFrecordParser:
 
 
 class LabelTransformer():
-    def __init__(self):
-        y_grid = tf.linspace(0.0, 1.0, LABEL_HEIGHT)
-        x_grid = tf.linspace(0.0, 1.0, LABEL_WIDTH)
+    def __init__(self,config):
+        self.LABEL_HEIGHT=config.LABEL_HEIGHT
+        self.LABEL_WIDTH=config.LABEL_WIDTH
+        self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ=config.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ
+        self.HEATMAP_NUM_FILTERS=config.HEATMAP_NUM_FILTERS
+        self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ=config.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ
+        self.PAF_NUM_FILTERS=config.PAF_NUM_FILTERS
+        self.PAF_GAUSSIAN_SIGMA_SQ=config.PAF_GAUSSIAN_SIGMA_SQ
+        self.IMAGE_SIZE=config.IMAGE_SIZE
+        self.INCLUDE_MASK=config.INCLUDE_MASK
+
+        y_grid = tf.linspace(0.0, 1.0, self.LABEL_HEIGHT)
+        x_grid = tf.linspace(0.0, 1.0, self.LABEL_WIDTH)
         yy, xx = tf.meshgrid(y_grid, x_grid, indexing='ij')  # indexing is a must, otherwise, it's just bizzare!
         self.grid = tf.stack((yy, xx), axis=-1)
 
@@ -51,7 +58,7 @@ class LabelTransformer():
         results = tf.TensorArray(tf.float32, size=kpts_tensor.shape[0])
         for i in tf.range(kpts_tensor.shape[0]):
             kpts_layer = kpts_tensor[i]
-            total_dist = tf.ones((LABEL_HEIGHT, LABEL_WIDTH), dtype=tf.float32)
+            total_dist = tf.ones((self.LABEL_HEIGHT, self.LABEL_WIDTH), dtype=tf.float32)
 
             for kpt in kpts_layer:
                 if kpt[2] == tf.constant(0.0):
@@ -62,11 +69,11 @@ class LabelTransformer():
                 total_dist = tf.math.minimum(spot_dist, total_dist)
 
             results = results.write(i, total_dist)
-        raw = tf.exp((-(results.stack() ** 2) / KPT_HEATMAP_GAUSSIAN_SIGMA_SQ))
+        raw = tf.exp((-(results.stack() ** 2) / self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ))
         result = tf.where(raw < 0.001, 0.0, raw)
 
         result = tf.transpose(result, (1, 2, 0))  # must transpose to match the moel output
-        result = tf.ensure_shape(result, ([LABEL_HEIGHT, LABEL_WIDTH, HEATMAP_NUM_FILTERS]))
+        result = tf.ensure_shape(result, ([self.LABEL_HEIGHT, self.LABEL_WIDTH, self.HEATMAP_NUM_FILTERS]))
         return result
 
     @tf.function
@@ -80,11 +87,11 @@ class LabelTransformer():
         all_dists = tf.map_fn(self.keypoints_layer,
                               kpts_tensor)  # ,parallel_iterations=20) for cpu it has no difference, maybe for gpu it will
 
-        raw = tf.exp((-(all_dists ** 2) / KPT_HEATMAP_GAUSSIAN_SIGMA_SQ))
+        raw = tf.exp((-(all_dists ** 2) / self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ))
         result = tf.where(raw < 0.001, 0.0, raw)
 
         result = tf.transpose(result, (1, 2, 0))  # must transpose to match the moel output
-        result = tf.ensure_shape(result, ([LABEL_HEIGHT, LABEL_WIDTH, HEATMAP_NUM_FILTERS]), name="kpts_enusured_shape")
+        result = tf.ensure_shape(result, ([self.LABEL_HEIGHT, self.LABEL_WIDTH, self.HEATMAP_NUM_FILTERS]), name="kpts_enusured_shape")
         return result
 
     @tf.function
@@ -101,7 +108,7 @@ class LabelTransformer():
         """This transforms a single keypoint into an array of the distances from the keypoint
         :param kpt must be tf.Tensor of shape (x,y,a) where a is either 0,1,2 for missing,invisible and visible"""
         if kpt[2] == tf.constant(0.0):
-            return tf.ones((LABEL_HEIGHT, LABEL_WIDTH), dtype=tf.float32)  # maximum distance incase of empty kpt, not ideal but meh
+            return tf.ones((self.LABEL_HEIGHT, self.LABEL_WIDTH), dtype=tf.float32)  # maximum distance incase of empty kpt, not ideal but meh
         else:
             ortho_dist = self.grid - kpt[0:2]
             return tf.linalg.norm(ortho_dist, axis=-1)
@@ -128,7 +135,7 @@ class LabelTransformer():
         result_x = result[..., 1]
         result = tf.concat((result_y, result_x), axis=-1)
 
-        result = tf.ensure_shape(result, ([LABEL_HEIGHT, LABEL_WIDTH, PAF_NUM_FILTERS]), name="paf_enusured_shape")
+        result = tf.ensure_shape(result, ([self.LABEL_HEIGHT, self.LABEL_WIDTH, self.PAF_NUM_FILTERS]), name="paf_enusured_shape")
         return result
 
     @tf.function
@@ -150,7 +157,7 @@ class LabelTransformer():
         """
         jpts = tf.reshape(joint[0:4], (2, 2))  # reshape to ((x1,y1),(x2,y2))
         if joint[4] == tf.constant(0.0) or tf.reduce_all(jpts[1] - jpts[0]==0.0):
-            return tf.zeros((LABEL_HEIGHT, LABEL_WIDTH, 2), dtype=tf.float32)  # in case of empty joint
+            return tf.zeros((self.LABEL_HEIGHT, self.LABEL_WIDTH, 2), dtype=tf.float32)  # in case of empty joint
         else:
             # this follows the OpenPose paper of generating the PAFs
             vector_full = jpts[1] - jpts[0]  # get the joint vector
@@ -167,9 +174,9 @@ class LabelTransformer():
             dist_from_begin = tf.linalg.norm(vectors_from_begin, axis=-1)  # get distances from the begining, and end
             dist_from_end = tf.linalg.norm(vectors_from_end, axis=-1)
 
-            begin_gaussian_mag = tf.exp((-(dist_from_begin ** 2) / PAF_GAUSSIAN_SIGMA_SQ))  # compute gaussian bells
-            end_gaussian_mag = tf.exp((-(dist_from_end ** 2) / PAF_GAUSSIAN_SIGMA_SQ))
-            normal_gaussian_mag = tf.exp((-(n_projections ** 2) / PAF_GAUSSIAN_SIGMA_SQ))
+            begin_gaussian_mag = tf.exp((-(dist_from_begin ** 2) / self.PAF_GAUSSIAN_SIGMA_SQ))  # compute gaussian bells
+            end_gaussian_mag = tf.exp((-(dist_from_end ** 2) / self.PAF_GAUSSIAN_SIGMA_SQ))
+            normal_gaussian_mag = tf.exp((-(n_projections ** 2) / self.PAF_GAUSSIAN_SIGMA_SQ))
 
             limit = (0 <= projections) & (projections <= vector_length)  # cutoff the joint before beginning and after end
             limit = tf.cast(limit, tf.float32)
@@ -182,61 +189,55 @@ class LabelTransformer():
             result = vector_mag * vector_hat  # broadcast joint direction vector to magnitude field
             return result
 
+    @tf.function
+    def make_label_tensors(self,elem):
+        """Transforms a dict data element:
+        1.Read jpg to tensor
+        1.1 Resize img to correct size for network
+        2.Convert keypoints to correct form label tensor
+        3.Convert joints to correct form label tensor
+        4.expands mask dim and ensures mask's shape
+        outputs a tuple data element"""
 
-_label_transformer = LabelTransformer()
+        idd = elem['id']
+        kpt_tr = self.keypoints_spots_vmapfn(elem['kpts'])
+        paf_tr = self.joints_PAFs(elem['joints'])
 
+        image_raw = elem["image_raw"]
+        image = tf.image.decode_jpeg(image_raw, channels=3)
+        image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+        image = tf.image.resize(image, self.IMAGE_SIZE)
 
-@tf.function
-def make_label_tensors(elem):
-    """Transforms a dict data element:
-    1.Read jpg to tensor
-    1.1 Resize img to correct size for network
-    2.Convert keypoints to correct form label tensor
-    3.Convert joints to correct form label tensor
-    4.expands mask dim and ensures mask's shape
-    outputs a tuple data element"""
+        new_elem = {}
+        # new_elem.update(elem) #if need to pass something through
 
-    idd = elem['id']
-    kpt_tr = _label_transformer.keypoints_spots_vmapfn(elem['kpts'])
-    paf_tr = _label_transformer.joints_PAFs(elem['joints'])
+        if self.INCLUDE_MASK:  # the mask is being stacked as the first element of both the input of the model and the true value from the dataset
+            mask = elem['mask']
+            mask = tf.ensure_shape(mask, ([self.LABEL_HEIGHT, self.LABEL_WIDTH]))
+            mask = tf.expand_dims(mask, axis=-1)  # required to concat
 
-    image_raw = elem["image_raw"]
-    image = tf.image.decode_jpeg(image_raw, channels=3)
-    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
-    image = tf.image.resize(image, IMAGE_SIZE)
+            kpt_tr = tf.concat([kpt_tr,mask], axis=-1)  # add mask as zero channel to inputs
+            paf_tr = tf.concat([paf_tr,mask], axis=-1)
+            new_elem["mask"] = mask
 
-    new_elem = {}
-    # new_elem.update(elem) #if need to pass something through
-
-    if INCLUDE_MASK:  # the mask is being stacked as the first element of both the input of the model and the true value from the dataset
-        mask = elem['mask']
-        mask = tf.ensure_shape(mask, ([LABEL_HEIGHT, LABEL_WIDTH]))
-        mask = tf.expand_dims(mask, axis=-1)  # required to concat
-
-        kpt_tr = tf.concat([kpt_tr,mask], axis=-1)  # add mask as zero channel to inputs
-        paf_tr = tf.concat([paf_tr,mask], axis=-1)
-
-        new_elem["mask"] = mask
-
-    new_elem["id"] = idd
-    new_elem["paf"] = paf_tr
-    new_elem["kpts"] = kpt_tr
-    new_elem["image"] = image
-
-    return new_elem
+        new_elem["id"] = idd
+        new_elem["paf"] = paf_tr
+        new_elem["kpts"] = kpt_tr
+        new_elem["image"] = image
+        return new_elem
 
 
-@tf.function
-def place_training_labels(elem):
-    """Distributes labels into the correct configuration for the model, ie 4 PAF stage, 2 kpt stages
-    must match the model"""
-    paf_tr = elem['paf']
-    kpt_tr = elem['kpts']
-    image = elem['image']
-
-    if INCLUDE_MASK:
-        inputs = (image,elem['mask'])
-    else:
-        inputs = image
-
-    return inputs, (paf_tr, paf_tr, paf_tr, paf_tr, kpt_tr, kpt_tr)  # this should match the model outputs, and is different for each model
+# @tf.function
+# def place_training_labels(elem):
+#     """Distributes labels into the correct configuration for the model, ie 4 PAF stage, 2 kpt stages
+#     must match the model"""
+#     paf_tr = elem['paf']
+#     kpt_tr = elem['kpts']
+#     image = elem['image']
+#
+#     if INCLUDE_MASK:
+#         inputs = (image,elem['mask'])
+#     else:
+#         inputs = image
+#
+#     return inputs, (paf_tr, paf_tr, paf_tr, paf_tr, kpt_tr, kpt_tr)  # this should match the model outputs, and is different for each model

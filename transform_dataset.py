@@ -6,15 +6,12 @@ import cv2
 from os import sep,environ
 
 from pycocotools.coco import COCO
-from config import IMAGES_PATH,JOINTS_DEF,KEYPOINTS_DEF,DS_NUM_KEYPOINTS ,TRAIN_ANNOTATIONS_PATH, \
-    TRANSFORMED_TRAIN_ANNOTATIONS_PATH,VALIDATION_ANNOTATIONS_PATH, TRANSFORMED_VALIDATION_ANNOTATIONS_PATH,LABEL_HEIGHT,LABEL_WIDTH
+#from config import IMAGES_PATH,JOINTS_DEF,KEYPOINTS_DEF,DS_NUM_KEYPOINTS ,LABEL_HEIGHT,LABEL_WIDTH
 
 if "DEBUG" in environ: #useful for debugging imgs with scview
     import matplotlib
     matplotlib.use('module://backend_interagg')
     # matplotlib.pyplot.imshow(total_mask);matplotlib.pyplot.show()
-
-NORMALIZE_SIZE=True
 
 def int64_feature(value):
     if type(value) != list:
@@ -58,20 +55,20 @@ def middle_kpt(kpt1, kpt2):
             min(kpt1[2] , kpt2[2])
         ]
 
-def reshape_kpts(keypoints:list)->np.ndarray:
+def reshape_kpts(keypoints:list,config)->np.ndarray:
     """reshapes keypoints list into numpy array
     :param keypoints list of coco keypoints of  ...kpt x,kpt y,kpt visibility...
     :returns np.ndarray of shape (DS_NUM_KEYPOINTS,3)"""
     keypts_np = np.array(keypoints, dtype=np.float32)
-    keypts_np = keypts_np.reshape((DS_NUM_KEYPOINTS, 3))
+    keypts_np = keypts_np.reshape((config.DS_NUM_KEYPOINTS, 3))
     return keypts_np
 
-def map_new_kpts(keypoints:np.ndarray)->np.ndarray:
+def map_new_kpts(keypoints:np.ndarray,config)->np.ndarray:
     """Map from dataset keypoints to own definition of keypoints, defined in KEYPOINTS_DEF.
      for example dataset has no neck keypoint,this map it by averging left and right shoulders
      otherwise, it rearragnes kpts in a more sensible order"""
     new_keypts=[]
-    for kpt_def in KEYPOINTS_DEF:
+    for kpt_def in config.KEYPOINTS_DEF:
         ds_idxs=kpt_def["ds_idxs"]
         assert type(ds_idxs) is int or (type(ds_idxs) is tuple and len(ds_idxs)==2)
 
@@ -99,19 +96,18 @@ def transform_keypts(keypoints, size:np.ndarray):
 
     #normalizing now saves this computation later for every tensor
     #the pixel idx get normalized to 0..1 range so pixel at (100,300) on a (400,600) sized image becomes (0.25,0.5)
-    if NORMALIZE_SIZE:
-        keypoints[:,:,0:2]=keypoints[:,:,0:2]/size
+    keypoints[:,:,0:2]=keypoints[:,:,0:2]/size
     return keypoints
 
 
-def create_all_joints(all_keypts):
+def create_all_joints(all_keypts,config):
     """create a joints tensor from keypoints tensor, according to COCO joints
     :param all_keypts - tensor of shape (number of persons,numpber of kpts(DS_NUM_KEYPOINTS),3)
     :return tensor of shape (number of persons,numpber of joints(19),5)"""
 
     def create_joints(keypts):
         joints = []
-        for kp1_idx, kp2_idx in JOINTS_DEF:
+        for kp1_idx, kp2_idx in config.JOINTS_DEF:
             kp1 = keypts[kp1_idx]
             kp2 = keypts[kp2_idx]
             if kp1[2] == 0 or kp2[2] == 0:
@@ -172,14 +168,14 @@ class FileSharder():
     def __exit__(self, *args):
         self._finish_file()
 
-def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, normalize_size=True, records_per_file=1000):
+def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, config):
     """This script transforms the COCO 2017 keypoint train,val files
     into a format with all keypoints and joints for an image, in a more convinent format,
     where the first axes is the bodypart or joint, the second is the object, and the third are the
     components (x,y,a) for keypoint and (x1,y1,x2,y2,a) for joint.
     The script saves it into matching pickle files.
     Meant to run once.
-    :param normalize_size determines whether the pixel coords should be normalized by size to 0..1 range
+    normalizes size the pixel coords to be normalized by size to 0..1 range
     """
 
     print("\nReading "+keypoint_annotations_file)
@@ -192,7 +188,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
     print("Found %d images" % len(imgIds))
 
     files_path=transformed_annotations_file+"-{:03}.tfrecords"
-    with FileSharder(tf.io.TFRecordWriter,files_path,1000) as writer:
+    with FileSharder(tf.io.TFRecordWriter,files_path,config.IMAGES_PER_TFRECORD) as writer:
         for img_id in imgIds:
             img_info = coco.loadImgs(img_id)[0]
 
@@ -207,8 +203,8 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
                     kpts=annotation['keypoints']
 
                     #map to new kpts
-                    kpts=reshape_kpts(kpts)
-                    kpts=map_new_kpts(kpts)
+                    kpts=reshape_kpts(kpts,config)
+                    kpts=map_new_kpts(kpts,config)
 
                     persons_kpts.append(kpts)
 
@@ -218,7 +214,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
             persons_kpts=np.array(persons_kpts,dtype=np.float32) #convert from list to array
 
             keypoints=transform_keypts(persons_kpts,np.array(size,dtype=np.int))
-            tr_joint=create_all_joints(keypoints)
+            tr_joint=create_all_joints(keypoints,config)
             tr_keypoints= keypoints.transpose((1, 0, 2))  # transpose keypoints for later stages
 
             total_mask=np.zeros(size,dtype=np.float32)
@@ -228,7 +224,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
                     total_mask=np.max([total_mask,single_mask],axis=0)
 
 
-            total_mask = cv2.resize(total_mask,(LABEL_HEIGHT,LABEL_WIDTH))
+            total_mask = cv2.resize(total_mask,(config.LABEL_HEIGHT,config.LABEL_WIDTH))
             total_mask =(total_mask >0.01).astype(np.int16)
 
             kernel = np.ones((5, 5), np.uint8)
@@ -238,7 +234,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
             total_mask = total_mask.astype(np.float32)
 
             try:
-                img_path=IMAGES_PATH +sep+ img_info['file_name']
+                img_path=config.IMAGES_PATH +sep+ img_info['file_name']
                 image_raw = tf.io.read_file(img_path)
             except:
                 print("Couldnt read file %s" % img_path)
@@ -248,5 +244,6 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, n
             writer.write(example)
 
 if __name__ == "__main__":
-    coco_to_TFrecords(TRAIN_ANNOTATIONS_PATH, TRANSFORMED_TRAIN_ANNOTATIONS_PATH)
-    coco_to_TFrecords(VALIDATION_ANNOTATIONS_PATH, TRANSFORMED_VALIDATION_ANNOTATIONS_PATH)
+    import config as cfg
+    coco_to_TFrecords(cfg.TRAIN_ANNOTATIONS_PATH, cfg.TRANSFORMED_TRAIN_ANNOTATIONS_PATH,cfg)
+    coco_to_TFrecords(cfg.VALIDATION_ANNOTATIONS_PATH, cfg.TRANSFORMED_VALIDATION_ANNOTATIONS_PATH,cfg)
