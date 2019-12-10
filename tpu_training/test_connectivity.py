@@ -2,7 +2,7 @@
 
 from sys import platform
 import subprocess
-from tpu_training.config_tpu import *
+from tpu_training.TPU_config import *
 
 if platform not in ["linux","linux2"]:
     raise OSError("This script must be run from the GCS VM corresponding to the TPU")

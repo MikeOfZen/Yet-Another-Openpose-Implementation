@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tpu_training.config_tpu import *
+from tpu_training.TPU_config import *
 
 def connect_to_tpu(tpu_address):
     return tf.distribute.cluster_resolver.TPUClusterResolver(tpu=tpu_address)
