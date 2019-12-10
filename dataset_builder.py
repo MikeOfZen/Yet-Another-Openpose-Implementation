@@ -4,7 +4,7 @@ import dataset_functions
 
 
 def get_tfrecord_filenames(path: str, config):
-    if config.TPU_MODE:
+    if config.STORAGE=="gcs":
         from google.cloud import storage
 
         def _get_tfrecord_filenames(path: str):
