@@ -14,6 +14,13 @@ class DatasetTransformer():
         self.PAF_NUM_FILTERS = config.PAF_NUM_FILTERS
         self.HEATMAP_NUM_FILTERS = config.HEATMAP_NUM_FILTERS
 
+        self.JOINTS_DEF = config.JOINTS_DEF
+
+        self.CONTRAST_RANGE = config.CONTRAST_RANGE
+        self.BRIGHTNESS_RANGE = config.BRIGHTNESS_RANGE
+        self.HUE_RANGE = config.HUE_RANGE
+        self.SATURATION_RANGE = config.SATURATION_RANGE
+
         # for parsing TFrecords files
         self.feature_description = {
                 'id'       : tf.io.FixedLenFeature([1], tf.int64),
@@ -43,6 +50,8 @@ class DatasetTransformer():
         kpts = tf.io.parse_tensor(parsed['kpts'], tf.float32)
         joints = tf.io.parse_tensor(parsed['joints'], tf.float32)
         mask = tf.io.parse_tensor(parsed['mask'], tf.float32)
+        mask = tf.ensure_shape(mask, ([self.LABEL_HEIGHT, self.LABEL_WIDTH]))
+        mask = tf.expand_dims(mask, axis=-1)  # required to concat
 
         kpts = tf.RaggedTensor.from_tensor(kpts)
         joints = tf.RaggedTensor.from_tensor(joints)
@@ -193,7 +202,9 @@ class DatasetTransformer():
 
     @tf.function
     def open_image(self, elem):
-
+        """Transforms a dict data element:
+        converts raw jpeg stored as bytes form to array and resizes to config determined size,
+         also converts blackwhite images to 3 channels"""
         image_raw = elem["image_raw"]
         image = tf.image.decode_jpeg(image_raw, channels=3)
         image = tf.image.convert_image_dtype(image, dtype=tf.float32)
@@ -207,42 +218,78 @@ class DatasetTransformer():
         return new_elem
 
     @tf.function
+    def apply_mask(self, elem):
+        """Transforms a dict data element:
+        applies background persons mask to keypoints and PAF tensors as last channel,
+        to be used by the special masked loss"""
+
+        mask = elem['mask']
+        pafs = elem["pafs"]
+        kpts = elem["kpts"]
+
+        kpts = tf.concat([kpts, mask], axis=-1)  # add mask as zero channel to inputs
+        pafs = tf.concat([pafs, mask], axis=-1)
+
+        new_elem = {}
+        new_elem.update(elem)
+        new_elem["pafs"] = pafs
+        new_elem["kpts"] = kpts
+
+        return new_elem
+
+    @tf.function
     def make_label_tensors(self, elem):
         """Transforms a dict data element:
-        1.Read jpg to tensor
-        1.1 Resize img to correct size for network
-        2.Convert keypoints to correct form label tensor
-        3.Convert joints to correct form label tensor
-        4.expands mask dim and ensures mask's shape
-        outputs a tuple data element"""
-
-        # idd = elem['id']
-        kpts = elem['kpts']
-        joints = elem['joints']
-        kpt_tr = self.keypoints_spots_vmapfn(kpts)
-        paf_tr = self.joints_PAFs(joints)
-
-        # image_raw = elem["image_raw"]
-        # image = tf.image.decode_jpeg(image_raw, channels=3)
-        # image = tf.image.convert_image_dtype(image, dtype=tf.float32)
-        # image = tf.image.resize(image, self.IMAGE_SIZE)
+        Convert keypoints to correct form label tensor.
+        Convert joints to correct form label tensor.
+        outputs a dict element"""
+        kpts = self.keypoints_spots_vmapfn(elem['kpts'])
+        pafs = self.joints_PAFs(elem['joints'])
 
         new_elem = {}
         new_elem.update(elem)  # if need to pass something through
-        new_elem.pop('kpts')
         new_elem.pop('joints')
 
-        if self.INCLUDE_MASK:  # the mask is being stacked as the first element of both the input of the model and the true value from the dataset
-            mask = elem['mask']
-            mask = tf.ensure_shape(mask, ([self.LABEL_HEIGHT, self.LABEL_WIDTH]))
-            mask = tf.expand_dims(mask, axis=-1)  # required to concat
+        new_elem["pafs"] = pafs
+        new_elem["kpts"] = kpts
 
-            kpt_tr = tf.concat([kpt_tr, mask], axis=-1)  # add mask as zero channel to inputs
-            paf_tr = tf.concat([paf_tr, mask], axis=-1)
+        return new_elem
 
-        new_elem["paf"] = paf_tr
-        new_elem["kpts"] = kpt_tr
+    @tf.function
+    def image_only_augmentation(self, elem):
+        """Dataset operation, working on dict element,
+        randomly changes the color,contrast,brightness of the input images"""
+        image = elem["image"]
+        # adjust contrast
+        image = tf.image.random_contrast(image, lower=1 - self.CONTRAST_RANGE, upper=1 + self.CONTRAST_RANGE)
+        image = tf.image.random_brightness(image, max_delta=self.BRIGHTNESS_RANGE)
+        image = tf.image.random_hue(image, self.HUE_RANGE)
+        image = tf.image.random_saturation(image, 1 - self.SATURATION_RANGE, 1 + self.SATURATION_RANGE)
+        image = tf.clip_by_value(image, 0, 1)  # clipping is required as some of these functions seems to go out of bounds [0..1]
 
+        new_elem = {}
+        new_elem.update(elem)
+        new_elem["image"] = image
+        return new_elem
+
+    @tf.function
+    def mirror_augmentation(self, elem):
+        """Dataset operation, working on dict element,
+        with a 0.5 chance, flips the image horizontally"""
+        new_elem = {}
+        new_elem.update(elem)
+
+        num_joints = len(self.JOINTS_DEF)
+        if tf.random.uniform([1]) > 0.5:
+            new_elem["image"] = tf.image.flip_left_right(elem["image"])
+            new_elem["kpts"] = tf.image.flip_left_right(elem["kpts"])
+            new_elem["mask"] = tf.image.flip_left_right(elem["mask"])
+            img_rotated_pafs = tf.image.flip_left_right(elem["pafs"])
+            # must flip the x paf tensor as well
+            Y = img_rotated_pafs[..., :num_joints]
+            X = -img_rotated_pafs[..., num_joints:]
+            pafs = tf.concat([Y, X], axis=-1)
+            new_elem["pafs"] = pafs
         return new_elem
 
 # @tf.function

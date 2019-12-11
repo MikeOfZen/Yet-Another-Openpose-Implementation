@@ -47,15 +47,21 @@ def build_training_ds(tfrecord_filenames: list, labels_placement_function, confi
 
     # cache  ,caching is here before decompressing jpgs and label tensors (should be ~9GB) , (full dataset should be ~90, cache later if RAM aviable)
     if config.CACHE: ds = ds.cache()
-    if config.SHUFFLE: ds = ds.shuffle(100)
+    if config.SHUFFLE: ds = ds.shuffle(config.SHUFFLE_BUFFER)
 
-    # Augmentation should be here, to operate on smaller tensors
 
     ds = ds.map(dataset_transformer.open_image) #jpeg to array
     ds = ds.map(dataset_transformer.make_label_tensors) # tensors to label_tensors (46,46,17/38)
-    ds = ds.map(labels_placement_function) # imgs,label_tensors arrange for model outputs
 
     ds = ds.batch(config.BATCH_SIZE)
+
+    #only image augmentation
+    if config.IMAGE_AUG: ds = ds.map(dataset_transformer.image_only_augmentation)
+    if config.MIRROR_AUG: ds = ds.map(dataset_transformer.mirror_augmentation)
+
+    ds = ds.map(dataset_transformer.apply_mask)
+    ds = ds.map(labels_placement_function) # imgs,label_tensors arrange for model outputs
+
     ds = ds.repeat()
     if config.PREFETCH: ds = ds.prefetch(config.PREFETCH)
     return ds
@@ -79,6 +85,8 @@ def build_validation_ds(tfrecord_filenames: list, labels_placement_function, con
 
     ds = ds.map(dataset_transformer.open_image) #jpeg to array
     ds = ds.map(dataset_transformer.make_label_tensors) # tensors to label_tensors (46,46,17/38)
+
+    ds = ds.map(dataset_transformer.apply_mask)
     ds = ds.map(labels_placement_function) # imgs,label_tensors arrange for model outputs
 
     ds = ds.batch(config.BATCH_SIZE)

@@ -78,7 +78,7 @@ def plot_vector_field(v_field, downsample=1):
 #     plt.imshow(actual_colors)
 #     plt.show()
 
-def show_img_pafs_kpts(img, pafs=None, kpts=None, squeeze_kpts=5, kpts_alpha=0.6, figure_size=8):
+def show_img_pafs_kpts(img, pafs=None, kpts=None,mask=None, squeeze_kpts=5, kpts_alpha=0.6, figure_size=8):
     """Draws an image, a keypoints layer, a part affinity field vector field, all three, or any combination thereof
     *the PAF array shape should be somewhat smaller ~x4 than the image to not overwhelm it.
     *doesnt work on batch
@@ -97,14 +97,17 @@ def show_img_pafs_kpts(img, pafs=None, kpts=None, squeeze_kpts=5, kpts_alpha=0.6
     kwargs = {}
     if type(pafs) is np.ndarray:
         pafs = np.squeeze(pafs)  # from batch to single
-        kwargs = {"extent": (0, pafs.shape[1], pafs.shape[0], 0)}
+        kwargs = {"extent": (0, pafs.shape[1]-1, pafs.shape[0]-1, 0)}
     if type(kpts) is np.ndarray:
         kpts = np.squeeze(kpts)  # from batch to single
-        kwargs = {"extent": (0, kpts.shape[1], kpts.shape[0], 0)}
+        kwargs = {"extent": (0, kpts.shape[1]-1, kpts.shape[0]-1, 0)}
 
     if type(img) is np.ndarray:
         img = np.squeeze(img)
         plt.imshow(img, **kwargs)
+    if type(mask) is np.ndarray:
+        mask = np.squeeze(mask)
+        plt.imshow(mask,alpha = 0.3,cmap='gray', **kwargs)
     if type(kpts) is np.ndarray:
         draw_kpts(kpts, squeeze_kpts, kpts_alpha)
     if type(pafs) is np.ndarray:

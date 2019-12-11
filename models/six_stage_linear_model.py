@@ -11,6 +11,8 @@ class ModelMaker:
         self.PAF_NUM_FILTERS = config.PAF_NUM_FILTERS
         self.HEATMAP_NUM_FILTERS = config.HEATMAP_NUM_FILTERS
         self.BATCH_NORMALIZATION_ON = config.BATCH_NORMALIZATION_ON
+        self.DROPOUT_RATE = config.DROPOUT_RATE
+
         self.INCLUDE_MASK = config.INCLUDE_MASK
         self.LABEL_HEIGHT = config.LABEL_HEIGHT
         self.LABEL_WIDTH = config.LABEL_WIDTH
@@ -149,7 +151,7 @@ class ModelDatasetComponent:
     def place_training_labels(self, elem):
         """Distributes labels into the correct configuration for the model, ie 4 PAF stage, 2 kpt stages
         must match the model"""
-        paf_tr = elem['paf']
+        paf_tr = elem['pafs']
         kpt_tr = elem['kpts']
         image = elem['image']
 
