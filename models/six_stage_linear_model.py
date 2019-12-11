@@ -83,7 +83,7 @@ class ModelMaker:
         x = self._make_conv_block(x, conv_block_filters, name + "_block5")
 
         x = tf.keras.layers.Conv2D(self.stage_final_nfilters, 1, padding="same", activation='relu', name=name + "_final1conv")(x)
-        if self.BATCH_NORMALIZATION_ON: x = tf.keras.layers.BatchNormalization(name=name + "_finalbn1")(x)
+        #if self.BATCH_NORMALIZATION_ON: x = tf.keras.layers.BatchNormalization(name=name + "_finalbn1")(x)
         x = tf.keras.layers.Conv2D(outputs, 1, padding="same", activation=last_activation, name=name + "_preoutput")(x)
         return x
 

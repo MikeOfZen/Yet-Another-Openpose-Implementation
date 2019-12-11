@@ -85,4 +85,13 @@ loss is NaN after 5 batch (128) training.
 -interesting bug,
 -fixed, problem was zero length joints
 
-Switching to double branching model
+added augmentation
+-image augmentation (might redundent)
+-mirror augmentation
+
+added dropout to model
+
+-"Full_model_2augs_dp" had good results. but training is half as fast.
+dropout was 0.2
+
+-"Full_model_2_2augs_dp01" lowering dropout to 0.1 should improve things. (continuing training from previous spot)
