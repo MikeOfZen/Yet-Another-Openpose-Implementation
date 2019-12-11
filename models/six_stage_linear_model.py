@@ -71,7 +71,7 @@ class ModelMaker:
             x = tf.keras.layers.concatenate(inputs, name=name + "_input")
         else:
             x = inputs[0]
-        if self.DROPOUT_RATE>0: x=tf.keras.layers.Dropout(self.DROPOUT_RATE)(x)
+        if self.DROPOUT_RATE > 0: x = tf.keras.layers.Dropout(self.DROPOUT_RATE)(x)
         x = self._make_conv_block(x, conv_block_filters, name + "_block1")
         if self.DROPOUT_RATE > 0: x = tf.keras.layers.Dropout(self.DROPOUT_RATE)(x)
         x = self._make_conv_block(x, conv_block_filters, name + "_block2")
