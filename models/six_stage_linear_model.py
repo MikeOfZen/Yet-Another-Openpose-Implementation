@@ -71,10 +71,15 @@ class ModelMaker:
             x = tf.keras.layers.concatenate(inputs, name=name + "_input")
         else:
             x = inputs[0]
+        if self.DROPOUT_RATE>0: x=tf.keras.layers.Dropout(self.DROPOUT_RATE)(x)
         x = self._make_conv_block(x, conv_block_filters, name + "_block1")
+        if self.DROPOUT_RATE > 0: x = tf.keras.layers.Dropout(self.DROPOUT_RATE)(x)
         x = self._make_conv_block(x, conv_block_filters, name + "_block2")
+        if self.DROPOUT_RATE > 0: x = tf.keras.layers.Dropout(self.DROPOUT_RATE)(x)
         x = self._make_conv_block(x, conv_block_filters, name + "_block3")
+        if self.DROPOUT_RATE > 0: x = tf.keras.layers.Dropout(self.DROPOUT_RATE)(x)
         x = self._make_conv_block(x, conv_block_filters, name + "_block4")
+        if self.DROPOUT_RATE > 0: x = tf.keras.layers.Dropout(self.DROPOUT_RATE)(x)
         x = self._make_conv_block(x, conv_block_filters, name + "_block5")
 
         x = tf.keras.layers.Conv2D(self.stage_final_nfilters, 1, padding="same", activation='relu', name=name + "_final1conv")(x)
