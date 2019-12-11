@@ -1,13 +1,13 @@
 import utils
-from os import sep, makedirs
+from os import makedirs
 
 import tensorflow as tf
 
 
 def make_checkpoint_callback(config):
-    checkpoints_path = config.CHECKPOINTS_PATH + sep + config.RUN_NAME + utils.now() + sep + "-E{epoch:04d}.ckpt"
+    checkpoints_path = config.CHECKPOINTS_PATH +"/"+ config.RUN_NAME + utils.now() + "/-E{epoch:04d}.ckpt"
     if not config.TPU_MODE:
-        makedirs(config.CHECKPOINTS_PATH + sep + config.RUN_NAME + utils.now(), exist_ok=True)
+        makedirs(config.CHECKPOINTS_PATH +"/"+ config.RUN_NAME + utils.now(), exist_ok=True)
 
     return tf.keras.callbacks.ModelCheckpoint(filepath=checkpoints_path,
                                               save_weights_only=True,
@@ -15,7 +15,7 @@ def make_checkpoint_callback(config):
 
 
 def make_tensorboard_callback(config):
-    tensorboard_path = config.TENSORBOARD_PATH + sep + config.RUN_NAME + utils.now()
+    tensorboard_path = config.TENSORBOARD_PATH +"/"+ config.RUN_NAME + utils.now()
     if not config.TPU_MODE:
         makedirs(tensorboard_path, exist_ok=False)
     return tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path

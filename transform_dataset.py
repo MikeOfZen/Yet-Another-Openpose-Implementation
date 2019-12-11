@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 import cv2
-from os import sep, environ
+from os import environ
 
 from pycocotools.coco import COCO
 
@@ -245,7 +245,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, c
             total_mask = total_mask.astype(np.float32)
 
             try:
-                img_path = config.IMAGES_PATH + sep + img_info['file_name']
+                img_path = config.IMAGES_PATH + "/"+  img_info['file_name']
                 image_raw = tf.io.read_file(img_path)
             except:
                 print("Couldn't read file %s" % img_path)
