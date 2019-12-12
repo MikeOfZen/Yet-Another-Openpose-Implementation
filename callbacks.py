@@ -19,7 +19,7 @@ def make_tensorboard_callback(config):
     if not config.TPU_MODE:
         makedirs(tensorboard_path, exist_ok=False)
     return tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path
-                                          , update_freq=config.TENSORBOARD_FREQ
+                                          #, update_freq=config.TENSORBOARD_FREQ
                                           , histogram_freq=2
                                           )
 

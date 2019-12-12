@@ -3,12 +3,12 @@ import numpy as np
 from keypoints_config import *
 
 TPU_MODE = False
-RUN_NAME = "test_autotune"
+RUN_NAME = ""
 # Training Mode
 INCLUDE_MASK = True
-ASK_FOR_CHECKPOINTS = 0
-SAVE_CHECKPOINTS=False
-SAVE_TENSORBOARD=False
+ASK_FOR_CHECKPOINTS = True
+SAVE_CHECKPOINTS=True
+SAVE_TENSORBOARD=True
 
 # Dataset reference values
 DATASET_SIZE = 56000  # exact size not critical
@@ -27,10 +27,10 @@ LABEL_WIDTH = 46  # same
 PAF_NUM_FILTERS = len(JOINTS_DEF) * 2
 HEATMAP_NUM_FILTERS = len(KEYPOINTS_DEF)
 BATCH_NORMALIZATION_ON = True
-DROPOUT_RATE=0.1 #set to 0 to disable
+DROPOUT_RATE=0.05 #set to 0 to disable
 
 # this is the gaussian spot sie that will be drawn on the training labels
-KPT_HEATMAP_GAUSSIAN_SIGMA_SQ = 0.02  # used for the size of the gaussian spot for each keypoint
+KPT_HEATMAP_GAUSSIAN_SIGMA_SQ = 0.008  # used for the size of the gaussian spot for each keypoint
 # JOINT_WIDTH=0.02  #used for the width of the vector field generated for each joint as a PAF, the unit is relative to image size ie 0..1
 # for lower resolution, a value too low (~0.005) here will make the vectors too sparse
 PAF_GAUSSIAN_SIGMA_SQ = 0.0015  # similiar to joint width, but works on gaussian width,tradeoff between model certainty and number of persons that can be discriminated in a frame
@@ -66,4 +66,4 @@ SATURATION_RANGE=0.2
 MIRROR_AUG=True
 
 #calbbacks settings
-TENSORBOARD_FREQ=30
+#TENSORBOARD_FREQ=30
