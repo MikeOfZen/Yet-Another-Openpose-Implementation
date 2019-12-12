@@ -3,11 +3,12 @@ import numpy as np
 from keypoints_config import *
 
 TPU_MODE = False
+RUN_NAME = "test_autotune"
 # Training Mode
 INCLUDE_MASK = True
 ASK_FOR_CHECKPOINTS = 0
-RUN_NAME = ""
-
+SAVE_CHECKPOINTS=False
+SAVE_TENSORBOARD=False
 
 # Dataset reference values
 DATASET_SIZE = 56000  # exact size not critical
@@ -25,7 +26,7 @@ LABEL_WIDTH = 46  # same
 # model settings
 PAF_NUM_FILTERS = len(JOINTS_DEF) * 2
 HEATMAP_NUM_FILTERS = len(KEYPOINTS_DEF)
-BATCH_NORMALIZATION_ON = False
+BATCH_NORMALIZATION_ON = True
 DROPOUT_RATE=0.1 #set to 0 to disable
 
 # this is the gaussian spot sie that will be drawn on the training labels
