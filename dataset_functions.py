@@ -15,6 +15,8 @@ class DatasetTransformer():
         self.HEATMAP_NUM_FILTERS = config.HEATMAP_NUM_FILTERS
 
         self.JOINTS_DEF = config.JOINTS_DEF
+        self.JOINTS_SIDES= config.JOINTS_SIDES
+        self.KEYPOINTS_SIDES = config.KEYPOINTS_SIDES
 
         self.CONTRAST_RANGE = config.CONTRAST_RANGE
         self.BRIGHTNESS_RANGE = config.BRIGHTNESS_RANGE
@@ -273,7 +275,7 @@ class DatasetTransformer():
         return new_elem
 
     @tf.function
-    def mirror_augmentation(self, elem):
+    def mirror_augmentation(self,elem):
         """Dataset operation, working on dict element,
         with a 0.5 chance, flips the image horizontally"""
         new_elem = {}
@@ -282,14 +284,43 @@ class DatasetTransformer():
         num_joints = len(self.JOINTS_DEF)
         if tf.random.uniform([1]) > 0.5:
             new_elem["image"] = tf.image.flip_left_right(elem["image"])
-            new_elem["kpts"] = tf.image.flip_left_right(elem["kpts"])
+            img_rotated_kpts = tf.image.flip_left_right(elem["kpts"])
             new_elem["mask"] = tf.image.flip_left_right(elem["mask"])
             img_rotated_pafs = tf.image.flip_left_right(elem["pafs"])
+
             # must flip the x paf tensor as well
-            Y = img_rotated_pafs[..., :num_joints]
-            X = -img_rotated_pafs[..., num_joints:]
-            pafs = tf.concat([Y, X], axis=-1)
+            pafY = img_rotated_pafs[..., :num_joints]
+            pafX = -img_rotated_pafs[..., num_joints:]
+
+            # must flip the labels as well
+            pafY_center = pafY[..., self.JOINTS_SIDES["C"][0]:self.JOINTS_SIDES["C"][1] + 1]
+            pafY_right = pafY[..., self.JOINTS_SIDES["R"][0]:self.JOINTS_SIDES["R"][1] + 1]
+            pafY_left = pafY[..., self.JOINTS_SIDES["L"][0]:self.JOINTS_SIDES["L"][1] + 1]
+
+            pafX_center = pafX[..., self.JOINTS_SIDES["C"][0]:self.JOINTS_SIDES["C"][1] + 1]
+            pafX_right = pafX[..., self.JOINTS_SIDES["R"][0]:self.JOINTS_SIDES["R"][1] + 1]
+            pafX_left = pafX[..., self.JOINTS_SIDES["L"][0]:self.JOINTS_SIDES["L"][1] + 1]
+
+            pafs = tf.concat([
+                    pafY_center
+                    , pafY_left
+                    , pafY_right
+                    , pafX_center
+                    , pafX_left
+                    , pafX_right
+                    ], axis=-1)  # this reconstitues the PAFS tensor with flipped labels, to match the image
             new_elem["pafs"] = pafs
+
+            kpts_center = img_rotated_kpts[..., self.KEYPOINTS_SIDES["C"][0]:self.KEYPOINTS_SIDES["C"][1] + 1]
+            kpts_left = img_rotated_kpts[..., self.KEYPOINTS_SIDES["R"][0]:self.KEYPOINTS_SIDES["R"][1] + 1]
+            kpts_right = img_rotated_kpts[..., self.KEYPOINTS_SIDES["L"][0]:self.KEYPOINTS_SIDES["L"][1] + 1]
+            kpts = tf.concat([
+                    kpts_center
+                    , kpts_left
+                    , kpts_right
+                    ], axis=-1)  # this reconstitues the KPTS tensor with flipped labels, to match the image
+
+            new_elem["kpts"] = kpts
         return new_elem
 
 # @tf.function

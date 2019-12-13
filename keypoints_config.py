@@ -2,7 +2,9 @@ import collections
 
 DS_NUM_KEYPOINTS=17
 
+
 #our newly defined ketpoints
+#for mirror augmentaiton to work, the order of keypoitns,and joints must be center,right,left
 KEYPOINTS_DEF={
  'nose'         :{"idx":0   ,"name":'nose'         ,"side":"C"   ,"ds_idxs":0    ,"mirror_name":None       },
  'sternum'      :{"idx":1   ,"name":'sternum'      ,"side":"C"   ,"ds_idxs":(5,6),"mirror_name":None       },
@@ -24,7 +26,7 @@ KEYPOINTS_DEF={
  'Lear'         :{"idx":17  ,"name":'Lear'         ,"side":"L"   ,"ds_idxs":3    ,"mirror_name":'Rear'     }
         }
 KEYPOINTS_DEF=collections.OrderedDict(sorted(KEYPOINTS_DEF.items(), key=lambda t: t[1]["idx"]))
-
+KEYPOINTS_SIDES={"C":(0,1),"R":(2,9),"L":(10,17)} #the starting and ending indexes for the center,right and left sides from KEYPOINTS_DEF above
 
 #our newly defined joints (disregarding coco defined ones)
 JOINTS_DEF={
@@ -47,6 +49,8 @@ JOINTS_DEF={
 "Ltemple"       :{"idx":16 ,"kpts":('Leye','Lear'),           "side":"L",  "name":"Ltemple"   ,"other_side_idx":"Rtemple"  }
 }
 JOINTS_DEF=collections.OrderedDict(sorted(JOINTS_DEF.items(), key=lambda t: t[1]["idx"]))
+JOINTS_SIDES={"C":(0,0),"R":(1,8),"L":(9,16)} #the starting and ending indexes for the center,right and left sides from JOINTS_DEF above
+
 
 #taken directly from the annotations JSON file
 #COCO_DATASET_KPTS=['nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear', 'left_shoulder', 'right_shoulder',
