@@ -312,8 +312,8 @@ class DatasetTransformer():
             new_elem["pafs"] = pafs
 
             kpts_center = img_rotated_kpts[..., self.KEYPOINTS_SIDES["C"][0]:self.KEYPOINTS_SIDES["C"][1] + 1]
-            kpts_left = img_rotated_kpts[..., self.KEYPOINTS_SIDES["R"][0]:self.KEYPOINTS_SIDES["R"][1] + 1]
-            kpts_right = img_rotated_kpts[..., self.KEYPOINTS_SIDES["L"][0]:self.KEYPOINTS_SIDES["L"][1] + 1]
+            kpts_right = img_rotated_kpts[..., self.KEYPOINTS_SIDES["R"][0]:self.KEYPOINTS_SIDES["R"][1] + 1]
+            kpts_left = img_rotated_kpts[..., self.KEYPOINTS_SIDES["L"][0]:self.KEYPOINTS_SIDES["L"][1] + 1]
             kpts = tf.concat([
                     kpts_center
                     , kpts_left
