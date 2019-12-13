@@ -10,11 +10,6 @@ ASK_FOR_CHECKPOINTS = True
 SAVE_CHECKPOINTS=True
 SAVE_TENSORBOARD=True
 
-# Dataset reference values
-DATASET_SIZE = 56000  # exact size not critical
-DATASET_VAL_SIZE = 2500
-
-IMAGES_PER_TFRECORD = 1000
 
 # this determines the size images will be resized to, and the size of the labels vreated
 IMAGE_WIDTH = 368
@@ -41,21 +36,36 @@ SHUFFLE_BUFFER=1000
 PREFETCH = 10  # size of prefetch size, 0 to disable
 CACHE = True  # depends on available memory size, around 20gb required for both cache and graph
 
-BATCH_SIZE = 2  # for use when on cpu for development, if on GPU, can safely increase
 
 
 # Training settings
 TRAINING_EPOCHS = 100
 
+# Dataset reference values
+DATASET_SIZE = 56000  # exact size not critical
+DATASET_VAL_SIZE = 2500
+
+IMAGES_PER_TFRECORD = 1000
+
+BATCH_SIZE = 2  # for use when on cpu for development, if on GPU, can safely increase
+REAL_EPOCH_STEPS = int(DATASET_SIZE / BATCH_SIZE)
+
+SHORT_EPOCH_STEPS=50 #actual epocsh used in training, smaller than real epoch, but allows to track progress better, [in batches]
+SHORT_TRAINING_EPOCHS=int(TRAINING_EPOCHS*(REAL_EPOCH_STEPS/SHORT_EPOCH_STEPS))
+
+SHORT_VALIDATION_STEPS=5 #per short epoch
+
+epoch_ratio=int(REAL_EPOCH_STEPS/SHORT_TRAINING_EPOCHS)
 # adam_learning_rate=0.001  #for reference
 BASE_LEARNING_RATE = 0.001
-LEARNING_RATE_SCHEDUELE = np.zeros(1000)
-LEARNING_RATE_SCHEDUELE[:3] = 1
-LEARNING_RATE_SCHEDUELE[3:20] = 1
-LEARNING_RATE_SCHEDUELE[20:40] = 1
-LEARNING_RATE_SCHEDUELE[40:100] = 0.5
-LEARNING_RATE_SCHEDUELE[100:] = 0.3
+LEARNING_RATE_SCHEDUELE = np.zeros(100000)  #used with short epochs
+LEARNING_RATE_SCHEDUELE[:3*epoch_ratio] = 1
+LEARNING_RATE_SCHEDUELE[3*epoch_ratio:20*epoch_ratio] = 1
+LEARNING_RATE_SCHEDUELE[20*epoch_ratio:40*epoch_ratio] = 1
+LEARNING_RATE_SCHEDUELE[40*epoch_ratio:100*epoch_ratio] = 0.5
+LEARNING_RATE_SCHEDUELE[100*epoch_ratio:] = 0.3
 LEARNING_RATE_SCHEDUELE *= BASE_LEARNING_RATE
+
 
 #Augmentation settings
 IMAGE_AUG=True
