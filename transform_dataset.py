@@ -7,7 +7,6 @@ from os import environ
 
 from pycocotools.coco import COCO
 
-
 if "DEBUG" in environ:  # useful for debugging imgs with scview
     import matplotlib
 
@@ -75,7 +74,7 @@ def map_new_kpts(keypoints: np.ndarray, config) -> list:
      for example dataset has no neck keypoint,this map it by averging left and right shoulders
      otherwise, it rearragnes kpts in a more sensible order"""
     new_keypts = []
-    for kpt_def in config.KEYPOINTS_DEF:
+    for kpt_name, kpt_def in config.KEYPOINTS_DEF.items():
         ds_idxs = kpt_def["ds_idxs"]
         assert type(ds_idxs) is int or (type(ds_idxs) is tuple and len(ds_idxs) == 2)
 
@@ -116,7 +115,10 @@ def create_all_joints(all_keypts, config):
 
     def create_joints(keypts):
         joints = []
-        for kp1_idx, kp2_idx in config.JOINTS_DEF:
+        for joint_name, joint_def in config.JOINTS_DEF.items():
+            kp1_name, kp2_name = joint_def["kpts"]
+            kp1_idx = config.KEYPOINTS_DEF[kp1_name]["idx"]
+            kp2_idx = config.KEYPOINTS_DEF[kp2_name]["idx"]
             kp1 = keypts[kp1_idx]
             kp2 = keypts[kp2_idx]
             if kp1[2] == 0 or kp2[2] == 0:
@@ -245,7 +247,7 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, c
             total_mask = total_mask.astype(np.float32)
 
             try:
-                img_path = config.IMAGES_PATH + "/"+  img_info['file_name']
+                img_path = config.IMAGES_PATH + "/" + img_info['file_name']
                 image_raw = tf.io.read_file(img_path)
             except:
                 print("Couldn't read file %s" % img_path)
@@ -257,6 +259,8 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, c
 
 if __name__ == "__main__":
     import default_config as cfg
+    import local_storage_config as storage_cfg
+    cfg.__dict__.update(storage_cfg.__dict__)
 
     coco_to_TFrecords(cfg.TRAIN_ANNS, cfg.TRAIN_TFRECORDS, cfg)
     coco_to_TFrecords(cfg.VALID_ANNS, cfg.VALID_TFRECORDS, cfg)

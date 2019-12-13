@@ -96,10 +96,16 @@ def show_img_pafs_kpts(img, pafs=None, kpts=None,mask=None, squeeze_kpts=5, kpts
 
     kwargs = {}
     if type(pafs) is np.ndarray:
-        pafs = np.squeeze(pafs)  # from batch to single
+        try:
+            pafs = np.squeeze(pafs,axis=0)  # from batch to single
+        except ValueError:
+            pass
         kwargs = {"extent": (0, pafs.shape[1]-1, pafs.shape[0]-1, 0)}
     if type(kpts) is np.ndarray:
-        kpts = np.squeeze(kpts)  # from batch to single
+        try:
+            kpts = np.squeeze(kpts, axis=0)  # from batch to single
+        except ValueError:
+            pass
         kwargs = {"extent": (0, kpts.shape[1]-1, kpts.shape[0]-1, 0)}
 
     if type(img) is np.ndarray:
