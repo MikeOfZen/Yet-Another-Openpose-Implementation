@@ -22,9 +22,9 @@ class AnalogRecall(tf.keras.metrics.Metric):
 
         mean_island_recall_err = recall_err_sum / err_island_size  # mean of the error
 
-        value = 1 - mean_island_recall_err / mean_island_true  # the 1- converts it to recall accuracy onstead of err
+        value = 1.0 - mean_island_recall_err / mean_island_true  # the 1- converts it to recall accuracy onstead of err
         self.sum.assign_add(value)
-        self.count.assign_add(1)
+        self.count.assign_add(1.0)
 
     def result(self):
         return self.sum/self.count
@@ -40,7 +40,7 @@ class MeanAbsolute(tf.keras.metrics.Metric):
     def update_state(self, y_true, y_pred, **kwargs):
         value=tf.reduce_mean(abs(y_pred))
         self.sum.assign_add(value)
-        self.count.assign_add(1)
+        self.count.assign_add(1.0)
 
     def result(self):
         return self.sum/self.count
@@ -56,7 +56,7 @@ class MeanAbsoluteRatio(tf.keras.metrics.Metric):
     def update_state(self, y_true, y_pred, **kwargs):
         value=tf.reduce_mean(abs(y_pred))/tf.reduce_mean(abs(y_true))
         self.sum.assign_add(value)
-        self.count.assign_add(1)
+        self.count.assign_add(1.0)
 
     def result(self):
         return self.sum/self.count
