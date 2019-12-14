@@ -6,7 +6,8 @@ class AnalogRecall(tf.keras.metrics.Metric):
 
     def __init__(self, name='analog_recall', thershold=0.01, **kwargs):
         super(AnalogRecall, self).__init__(name=name, **kwargs)
-        self.mean = self.add_weight(name='mean', initializer='zeros')
+        self.sum = self.add_weight(name='sum', initializer='zeros')
+        self.count = self.add_weight(name='count', initializer='zeros')
         self.thershold = thershold
 
     def update_state(self, y_true, y_pred, **kwargs):
@@ -22,38 +23,43 @@ class AnalogRecall(tf.keras.metrics.Metric):
         mean_island_recall_err = recall_err_sum / err_island_size  # mean of the error
 
         value = 1 - mean_island_recall_err / mean_island_true  # the 1- converts it to recall accuracy onstead of err
-        self.mean.assign_add(value)
+        self.sum.assign_add(value)
+        self.count.assign_add(1)
 
     def result(self):
-        return self.mean
+        return self.sum/self.count
 
 class MeanAbsolute(tf.keras.metrics.Metric):
     """This metric returns the sum of the absolute of the predictions"""
 
     def __init__(self, name='SumAbsolute', **kwargs):
         super(MeanAbsolute, self).__init__(name=name, **kwargs)
-        self.mean = self.add_weight(name='mean', initializer='zeros')
+        self.sum = self.add_weight(name='sum', initializer='zeros')
+        self.count = self.add_weight(name='count', initializer='zeros')
 
     def update_state(self, y_true, y_pred, **kwargs):
         value=tf.reduce_mean(abs(y_pred))
-        self.mean.assign_add(value)
+        self.sum.assign_add(value)
+        self.count.assign_add(1)
 
     def result(self):
-        return self.mean
+        return self.sum/self.count
 
 class MeanAbsoluteRatio(tf.keras.metrics.Metric):
     """This metric returns the ratio of the mean absoulte of the prediction vs truth"""
 
     def __init__(self, name='MeanAbsoluteRatio', **kwargs):
         super(MeanAbsoluteRatio, self).__init__(name=name, **kwargs)
-        self.mean = self.add_weight(name='mean', initializer='zeros')
+        self.sum = self.add_weight(name='sum', initializer='zeros')
+        self.count = self.add_weight(name='count', initializer='zeros')
 
     def update_state(self, y_true, y_pred, **kwargs):
         value=tf.reduce_mean(abs(y_pred))/tf.reduce_mean(abs(y_true))
-        self.mean.assign_add(value)
+        self.sum.assign_add(value)
+        self.count.assign_add(1)
 
     def result(self):
-        return self.mean
+        return self.sum/self.count
 
 class MaskedMeanSquaredError(tf.keras.losses.MeanSquaredError):
     def __call__(self, true, pred):
