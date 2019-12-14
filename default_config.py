@@ -21,8 +21,8 @@ LABEL_WIDTH = 46  # same
 # model settings
 PAF_NUM_FILTERS = len(JOINTS_DEF) * 2
 HEATMAP_NUM_FILTERS = len(KEYPOINTS_DEF)
-BATCH_NORMALIZATION_ON = True
-DROPOUT_RATE=0.05 #set to 0 to disable
+BATCH_NORMALIZATION_ON = False
+DROPOUT_RATE=0 #set to 0 to disable
 
 # this is the gaussian spot sie that will be drawn on the training labels
 KPT_HEATMAP_GAUSSIAN_SIGMA_SQ = 0.008  # used for the size of the gaussian spot for each keypoint
@@ -45,9 +45,9 @@ IMAGES_PER_TFRECORD = 1000
 BATCH_SIZE = 2  # for use when on cpu for development, if on GPU, can safely increase
 
 #Augmentation settings
-IMAGE_AUG=True
+IMAGE_AUG=False
 CONTRAST_RANGE=0.5
 BRIGHTNESS_RANGE=0.2
 HUE_RANGE=0.1
 SATURATION_RANGE=0.2
-MIRROR_AUG=True
+MIRROR_AUG=False
