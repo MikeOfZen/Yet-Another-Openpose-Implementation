@@ -27,15 +27,15 @@ class AnalogRecall(tf.keras.metrics.Metric):
     def result(self):
         return self.mean
 
-class SumAbsolute(tf.keras.metrics.Metric):
+class MeanAbsolute(tf.keras.metrics.Metric):
     """This metric returns the sum of the absolute of the predictions"""
 
     def __init__(self, name='SumAbsolute', **kwargs):
-        super(SumAbsolute, self).__init__(name=name, **kwargs)
+        super(MeanAbsolute, self).__init__(name=name, **kwargs)
         self.mean = self.add_weight(name='mean', initializer='zeros')
 
     def update_state(self, y_true, y_pred, **kwargs):
-        value=tf.reduce_sum(abs(y_pred))
+        value=tf.reduce_mean(abs(y_pred))
         self.mean.assign_add(value)
 
     def result(self):
