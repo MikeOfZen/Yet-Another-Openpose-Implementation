@@ -32,7 +32,7 @@ class AnalogRecall(tf.keras.metrics.Metric):
 class MeanAbsolute(tf.keras.metrics.Metric):
     """This metric returns the sum of the absolute of the predictions"""
 
-    def __init__(self, name='SumAbsolute', **kwargs):
+    def __init__(self, name='MeanAbsolute', **kwargs):
         super(MeanAbsolute, self).__init__(name=name, **kwargs)
         self.sum = self.add_weight(name='sum', initializer='zeros')
         self.count = self.add_weight(name='count', initializer='zeros')
