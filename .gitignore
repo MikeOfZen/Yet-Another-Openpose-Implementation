@@ -6,3 +6,4 @@
 /dataset/annotations/*
 **/__pycache__
 **/.ipynb*
+**/.ipynb_checkpoints/*
