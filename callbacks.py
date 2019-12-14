@@ -4,8 +4,8 @@ from os import makedirs
 import tensorflow as tf
 
 
-def make_checkpoint_callback(config,freq):
-    checkpoints_path = config.CHECKPOINTS_PATH +"/"+ config.RUN_NAME + utils.now() + "/-E{epoch:04d}.ckpt"
+def make_checkpoint_callback(config,sig,freq):
+    checkpoints_path = config.CHECKPOINTS_PATH +"/"+ config.RUN_NAME + sig + "/-E{epoch:04d}.ckpt"
     if not config.TPU_MODE:
         makedirs(config.CHECKPOINTS_PATH +"/"+ config.RUN_NAME + utils.now(), exist_ok=True)
 
@@ -15,8 +15,8 @@ def make_checkpoint_callback(config,freq):
                                               ,verbose=1)
 
 
-def make_tensorboard_callback(config,hist_freq=0):
-    tensorboard_path = config.TENSORBOARD_PATH +"/"+ config.RUN_NAME + utils.now()
+def make_tensorboard_callback(config,sig,hist_freq=0):
+    tensorboard_path = config.TENSORBOARD_PATH +"/"+ config.RUN_NAME + sig
     if not config.TPU_MODE:
         makedirs(tensorboard_path, exist_ok=False)
     return tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path

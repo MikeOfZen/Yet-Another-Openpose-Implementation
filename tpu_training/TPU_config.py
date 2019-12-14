@@ -1,5 +1,6 @@
 TPU_MODE = True
 
+CACHE = True 
 BATCH_SIZE = 128
 
 TPU_IP = '10.0.3.2'

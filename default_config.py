@@ -34,7 +34,7 @@ PAF_GAUSSIAN_SIGMA_SQ = 0.0015  # similiar to joint width, but works on gaussian
 SHUFFLE = True
 SHUFFLE_BUFFER=1000
 PREFETCH = 10  # size of prefetch size, 0 to disable
-CACHE = True  # depends on available memory size, around 20gb required for both cache and graph
+CACHE = False  # depends on available memory size, around 20gb required for both cache and graph
 
 # Dataset reference values
 DATASET_SIZE = 56000  # exact size not critical

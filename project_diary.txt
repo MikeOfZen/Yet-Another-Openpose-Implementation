@@ -95,3 +95,8 @@ added dropout to model
 dropout was 0.2
 
 -"Full_model_2_2augs_dp01" lowering dropout to 0.1 should improve things. (continuing training from previous spot)
+
+completly overhauled the kpts and joints order and indexation scheme. , now they are in center,right,left order.
+
+with dropout and batch norm, it seems the training is zero or extremely slow.
+disabled for now, running model 8 with augmentations, we'll let it run its course (30 epochs)
