@@ -6,7 +6,7 @@ TPU_MODE = False
 RUN_NAME = ""
 # Training Mode
 INCLUDE_MASK = True
-ASK_FOR_CHECKPOINTS = True
+ASK_FOR_CHECKPOINTS = False
 SAVE_CHECKPOINTS=True
 SAVE_TENSORBOARD=True
 
@@ -45,9 +45,9 @@ IMAGES_PER_TFRECORD = 1000
 BATCH_SIZE = 2  # for use when on cpu for development, if on GPU, can safely increase
 
 #Augmentation settings
-IMAGE_AUG=False
+IMAGE_AUG=True
 CONTRAST_RANGE=0.5
 BRIGHTNESS_RANGE=0.2
 HUE_RANGE=0.1
 SATURATION_RANGE=0.2
-MIRROR_AUG=False
+MIRROR_AUG=True
