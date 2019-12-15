@@ -19,8 +19,9 @@ class ModelMaker:
         self.INPUT_SHAPE = (config.IMAGE_HEIGHT, config.IMAGE_WIDTH, 3)
         self.MASK_SHAPE = (config.LABEL_HEIGHT, config.LABEL_WIDTH, 1)
 
-        self.conv_block_nfilters = 96
+
         self.stage_final_nfilters = 512
+        self.base_activation=tf.keras.layers.ReLU
 
         self._get_vgg_layer_config_weights()
 
@@ -49,19 +50,28 @@ class ModelMaker:
         return x
 
     def _make_stage0(self, x):
-        x = tf.keras.layers.Conv2D(512, 1, padding="same", activation='relu', name="stage0_final_conv1")(x)
-        x = tf.keras.layers.Conv2D(512, 1, padding="same", activation='relu', name="stage0_final_conv2")(x)
-        x = tf.keras.layers.Conv2D(256, 1, padding="same", activation='relu', name="stage0_final_conv3")(x)
-        x = tf.keras.layers.Conv2D(256, 1, padding="same", activation='relu', name="stage0_final_conv4")(x)
+        x = tf.keras.layers.Conv2D(512, 1, padding="same", name="stage0_final_conv1")(x)
+        x = self.base_activation()(x)
+        x = tf.keras.layers.Conv2D(512, 1, padding="same", name="stage0_final_conv2")(x)
+        x = self.base_activation()(x)
+        x = tf.keras.layers.Conv2D(256, 1, padding="same", name="stage0_final_conv3")(x)
+        x = self.base_activation()(x)
+        x = tf.keras.layers.Conv2D(256, 1, padding="same", name="stage0_final_conv4")(x)
+        x = self.base_activation()(x)
         return x
 
-    def _make_conv_block(self, x, conv_block_filters, name):
-        if self.BATCH_NORMALIZATION_ON: x = tf.keras.layers.BatchNormalization(name=name + "_bn3")(x)
-        x1 = tf.keras.layers.Conv2D(conv_block_filters, 3, padding="same", activation='relu', name=name + "_conv1")(x)
+    def _make_conv_block(self, x0, conv_block_filters, name):
+        if self.BATCH_NORMALIZATION_ON: x0 = tf.keras.layers.BatchNormalization(name=name + "_bn3")(x0)
+        x1 = tf.keras.layers.Conv2D(conv_block_filters, 3, padding="same", name=name + "_conv1")(x0)
+        x1 = self.base_activation()(x1)
+
         if self.BATCH_NORMALIZATION_ON: x1 = tf.keras.layers.BatchNormalization(name=name + "_bn1")(x1)
-        x2 = tf.keras.layers.Conv2D(conv_block_filters, 3, padding="same", activation='relu', name=name + "_conv2")(x1)
+        x2 = tf.keras.layers.Conv2D(conv_block_filters, 3, padding="same", name=name + "_conv2")(x1)
+        x2 = self.base_activation()(x2)
+
         if self.BATCH_NORMALIZATION_ON: x2 = tf.keras.layers.BatchNormalization(name=name + "_bn2")(x2)
-        x3 = tf.keras.layers.Conv2D(conv_block_filters, 3, padding="same", activation='relu', name=name + "_conv3")(x2)
+        x3 = tf.keras.layers.Conv2D(conv_block_filters, 3, padding="same", name=name + "_conv3")(x2)
+        x3 = self.base_activation()(x3)
 
         output = tf.keras.layers.concatenate([x1, x2, x3], name=name + "_output")
         return output
@@ -82,9 +92,10 @@ class ModelMaker:
         if self.DROPOUT_RATE > 0: x = tf.keras.layers.Dropout(self.DROPOUT_RATE)(x)
         x = self._make_conv_block(x, conv_block_filters, name + "_block5")
 
-        x = tf.keras.layers.Conv2D(self.stage_final_nfilters, 1, padding="same", activation='relu', name=name + "_final1conv")(x)
-        
-        x = tf.keras.layers.Conv2D(outputs, 1, padding="same", activation=last_activation, name=name + "_preoutput")(x)
+        x = tf.keras.layers.Conv2D(self.stage_final_nfilters, 1, padding="same", name=name + "_final1conv")(x)
+        x=self.base_activation()(x)
+        x = tf.keras.layers.Conv2D(outputs, 1, padding="same", name=name + "_final2conv")(x)
+        x=last_activation(x)
         return x
 
     @staticmethod
@@ -117,18 +128,18 @@ class ModelMaker:
         stage0_output = self._make_stage0(stage00_output)
         # PAF stages
         # stage 1
-        stage1_output = self._make_stage_i([stage0_output], "s1pafs", 96, self.PAF_NUM_FILTERS, "linear")
+        stage1_output = self._make_stage_i([stage0_output], "s1pafs", 96, self.PAF_NUM_FILTERS, tf.keras.activations.linear)
         # stage 2
-        stage2_output = self._make_stage_i([stage1_output, stage0_output], "s2pafs", 128, self.PAF_NUM_FILTERS, "linear")
+        stage2_output = self._make_stage_i([stage1_output, stage0_output], "s2pafs", 128, self.PAF_NUM_FILTERS, tf.keras.activations.linear)
         # stage 3
-        stage3_output = self._make_stage_i([stage2_output, stage0_output], "s3pafs", 128, self.PAF_NUM_FILTERS, "linear")
+        stage3_output = self._make_stage_i([stage2_output, stage0_output], "s3pafs", 128, self.PAF_NUM_FILTERS, tf.keras.activations.linear)
         # stage 4
-        stage4_output = self._make_stage_i([stage3_output, stage0_output], "s4pafs", 128, self.PAF_NUM_FILTERS, "linear")
+        stage4_output = self._make_stage_i([stage3_output, stage0_output], "s4pafs", 128, self.PAF_NUM_FILTERS, tf.keras.activations.linear)
         # keypoint heatmap stages
         # stage5
-        stage5_output = self._make_stage_i([stage4_output, stage0_output], "s5kpts", 96, self.HEATMAP_NUM_FILTERS, "relu")
+        stage5_output = self._make_stage_i([stage4_output, stage0_output], "s5kpts", 96, self.HEATMAP_NUM_FILTERS, tf.keras.activations.tanh)
         # stage6
-        stage6_output = self._make_stage_i([stage5_output, stage4_output, stage0_output], "s6kpts", 128, self.HEATMAP_NUM_FILTERS, "relu")
+        stage6_output = self._make_stage_i([stage5_output, stage4_output, stage0_output], "s6kpts", 128, self.HEATMAP_NUM_FILTERS, tf.keras.activations.tanh)
 
         training_inputs = input_tensor
         training_outputs = [stage1_output, stage2_output, stage3_output, stage4_output, stage5_output, stage6_output]
