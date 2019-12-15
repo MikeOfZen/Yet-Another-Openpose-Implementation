@@ -11,18 +11,17 @@ class AnalogRecall(tf.keras.metrics.Metric):
         self.thershold = thershold
 
     def update_state(self, y_true, y_pred, **kwargs):
-        true_island_sum = tf.reduce_sum(tf.where(y_true > self.thershold, y_true, 0))  # get sum of the true island
-        true_island_size = tf.cast(tf.math.count_nonzero(y_true > self.thershold), dtype=tf.float32)  # get size of the island
-        mean_island_true = true_island_sum / true_island_size  # average island value
+        a_true = abs(y_true)
+        a_pred = abs(y_pred,)
+        boundry=a_true > self.thershold
+        bounded_true = tf.where(boundry, a_true, 0)
+        bounded_pred= tf.where(boundry, a_pred, 0)
 
-        err = y_true - y_pred  # get all error
-        recall_err = tf.where(err > 0, err, 0)  # get only recall error, the parts where prediction is missing
-        recall_err_sum = tf.reduce_sum(recall_err)
-        err_island_size = tf.cast(tf.math.count_nonzero(y_true > self.thershold), tf.float32)  # get size of the islands above thershold
+        err=bounded_true-bounded_pred
+        recall_err = tf.where(err > 0, err, 0)
 
-        mean_island_recall_err = recall_err_sum / err_island_size  # mean of the error
+        value=1.0-tf.reduce_sum(recall_err)/tf.reduce_sum(bounded_true)
 
-        value = 1.0 - mean_island_recall_err / mean_island_true  # the 1- converts it to recall accuracy onstead of err
         self.sum.assign_add(value)
         self.count.assign_add(1.0)
 
