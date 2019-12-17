@@ -2,66 +2,39 @@ import sys
 sys.path.append("..")
 
 import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
+import numba
 
+@numba.jit(nopython=True)
+def mark_islands(input) ->(np.ndarray,dict):
+    """This creates an array marking seperate truth islands in a truth array
+    :param input:2D array bool array
+    :return (islands array-of marked islands,head-island connections dict)"""
+    assert len(input.shape)==2 ,"Must be 2D array"
+    dim0 = input.shape[0]
+    dim1 = input.shape[1]
 
+    island = np.zeros(input.shape, dtype=np.uint8)
+    island_num = 1
+    head={}
 
-y_grid = tf.linspace(0.0, 1.0, 100)
-x_grid = tf.linspace(0.0, 1.0, 100)
-yy, xx = tf.meshgrid(y_grid, x_grid, indexing='ij')  # indexing is a must, otherwise, it's just bizzare!
-grid = tf.stack((yy, xx), axis=-1)
-
-
-def keypoints_layer(kpts_layer):
-    """This transforms a single layer of keypoints (such as 3 keypoints of type 'right shoulder')
-    the keypoint_distance creates an array of the distances from each keypoint
-    and this reduces them to a single array by the  of the distances.
-    :param kpts_layer must be a tf.Tensor of shape (n,3)"""
-    layer_dists = tf.map_fn(keypoint_distance, kpts_layer)
-    all_dists=tf.math.reduce_min(layer_dists, axis=0)
-    raw = tf.exp((-(all_dists ** 2) / 0.1))
-    return raw
-
-def keypoint_distance(kpt):
-    """This transforms a single keypoint into an array of the distances from the keypoint
-    :param kpt must be tf.Tensor of shape (x,y,a) where a is either 0,1,2 for missing,invisible and visible"""
-    if kpt[2] == tf.constant(0.0):
-        return tf.ones((100, 100), dtype=tf.float32)  # maximum distance incase of empty kpt, not ideal but meh
-    else:
-        ortho_dist = grid - kpt[0:2]
-        return tf.linalg.norm(ortho_dist, axis=-1)
-
-kpts=np.array([
-        [0.3,0.3,2],
-        [0.7,0.7,2],
-        ],dtype=np.float32)
-sample=keypoints_layer(kpts)
-
-input = sample > 0.5
-
-island = np.zeros((input.shape), dtype=np.int)
-results = []
-island_num = 1
-head={}
-
-for x in range(1, 46):
-    for y in range(1, 46):
-        if input[y, x]:
-            above = island[y - 1, x]
-            left = island[y, x - 1]
-            if not above and not left:
-                island[y , x]=island_num
-                island_num += 1
-            elif above and not left:
-                island[y, x] = above
-            elif not above and left:
-                island[y, x] = left
-            elif above and left:
-                #make above child of left
-                island[y, x] = left
-                if above != left:
-                    head[above]=left
-
-plt.imshow(island)
-plt.colorbar()
+    for x in range(dim0):
+        for y in range(dim1):
+            if input[y, x]:
+                iy = y + 1 #to handle array edge case, island idxs are shifter by one
+                ix = x + 1
+                above = island[iy - 1, ix]
+                left = island[iy, ix - 1]
+                if not above and not left:
+                    island[iy , ix]=island_num
+                    head[island_num] = 0 #stays None if island is isoalted, or gets changed to master island later
+                    island_num += 1
+                elif above and not left:
+                    island[iy, ix] = above
+                elif not above and left:
+                    island[iy, ix] = left
+                elif above and left:
+                    #make above child of left
+                    island[iy, ix] = left
+                    if above != left:
+                        head[above]=left
+    return island[1:,1:],head
