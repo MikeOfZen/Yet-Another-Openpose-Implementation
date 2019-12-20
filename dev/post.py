@@ -3,9 +3,9 @@ sys.path.append("..")
 
 import numpy as np
 import numba
-import collections
 
-@numba.jit(nopython=True)
+
+@numba.njit
 def mark_islands(input) ->(np.ndarray,dict):
     """This creates an array marking seperate truth islands in a truth array
     :param input:2D array bool array
@@ -40,7 +40,7 @@ def mark_islands(input) ->(np.ndarray,dict):
                         island_hierarchy[left]=above
     return islands[1:,1:],island_hierarchy
 
-@numba.jit(nopython=True)
+@numba.njit
 def sort_island_hierarchy(island_hierarchy):
     """converts the hierarchical island dict to a map to the top level island"""
     compact = numba.typed.Dict.empty(key_type=numba.types.uint16,value_type=numba.types.uint16)
@@ -52,7 +52,7 @@ def sort_island_hierarchy(island_hierarchy):
         compact[child] = last_parent
     return compact
 
-@numba.jit(nopython=True)
+@numba.njit
 def islands_max(heatmap, islands, island_hierarchy):
     """This returns the maximum value from values for each island from islands"""
     dim0=islands.shape[0]
@@ -82,7 +82,7 @@ def islands_max(heatmap, islands, island_hierarchy):
 
     return peaks_l,islands_max_l
 
-@numba.jit(nopython=True)
+@numba.njit
 def find_peaks(heatmap,threshold):
     """This takes a 2D heatmap, and returns all peaks on discontinuous regions (islands) for which the heatmap is above the threshold"""
     truth_islands=heatmap>threshold #get which parts are above the threshold
@@ -93,3 +93,69 @@ def find_peaks(heatmap,threshold):
     peaks,island_max=islands_max(heatmap,segemented_islands,sorted_island_hierarchy) #get the maximum peak location (and value) for each island
     return peaks,island_max
 
+
+spec = [
+        ('fields', numba.float32[:, :, :]),
+        ('sum', numba.float32[:]),
+        ('num_fields', numba.uint16),
+        ]
+
+@numba.jitclass(spec)
+class LineVectorIntegral:
+    def __init__(self, fields):
+        self.fields = fields
+        self.num_fields = self.fields.shape[-1]
+        self.sum = np.zeros(self.num_fields, dtype=np.float32)
+
+    def integrate(self, y, x):
+        self.sum += self.fields[y, x, :]
+
+    def integrate_line_high(self, y0, x0, y1, x1):
+        dx = x1 - x0
+        dy = y1 - y0
+        xi = 1
+        if dx < 0:
+            xi = -1
+            dx = -dx
+        D = 2 * dx - dy
+        x = x0
+        for y in range(y0, y1 + 1):
+            self.integrate(y, x)
+            if D > 0:
+                x = x + xi
+                D = D - 2 * dy
+            D = D + 2 * dx
+
+    def integrate_line_low(self, y0, x0, y1, x1):
+        dx = x1 - x0
+        dy = y1 - y0
+        yi = 1
+        if dy < 0:
+            yi = -1
+            dy = -dy
+        D = 2 * dy - dx
+        y = y0
+        for x in range(x0, x1 + 1):
+            self.integrate(y, x)
+            if D > 0:
+                y = y + yi
+                D = D - 2 * dx
+            D = D + 2 * dy
+
+    def integrate_line(self, start, end):
+        y0 = start[0]
+        x0 = start[1]
+        y1 = end[0]
+        x1 = end[1]
+        self.sum[:] = 0.0
+        if abs(y1 - y0) < abs(x1 - x0):
+            if x0 > x1:
+                self.integrate_line_low(y1, x1, y0, x0)
+            else:
+                self.integrate_line_low(y0, x0, y1, x1)
+        else:
+            if y0 > y1:
+                self.integrate_line_high(y1, x1, y0, x0)
+            else:
+                self.integrate_line_high(y0, x0, y1, x1)
+        return self.sum

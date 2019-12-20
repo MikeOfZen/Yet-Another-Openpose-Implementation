@@ -166,6 +166,7 @@ class DatasetTransformer():
     def single_PAF(self, joint):
         """ Makes a single vector valued PAF (part affinity field) array
         *does not support batched input
+        :param joint a 1D tensor of (x1,y1,x2,y2,visability)
         :return a tensor of shape (LABEL_HEIGHT, LABEL_WIDTH, 2)
         """
         jpts = tf.reshape(joint[0:4], (2, 2))  # reshape to ((x1,y1),(x2,y2))
