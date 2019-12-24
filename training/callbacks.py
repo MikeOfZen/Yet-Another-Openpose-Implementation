@@ -1,4 +1,4 @@
-import utils
+from training import utils
 from os import makedirs
 
 import tensorflow as tf
@@ -7,7 +7,7 @@ import tensorflow as tf
 def make_checkpoint_callback(config,sig,freq):
     checkpoints_path = config.CHECKPOINTS_PATH +"/"+ config.RUN_NAME + sig + "/-E{epoch:04d}.ckpt"
     if not config.TPU_MODE:
-        makedirs(config.CHECKPOINTS_PATH +"/"+ config.RUN_NAME + utils.now(), exist_ok=True)
+        makedirs(config.CHECKPOINTS_PATH + "/" + config.RUN_NAME + utils.now(), exist_ok=True)
 
     return tf.keras.callbacks.ModelCheckpoint(filepath=checkpoints_path
                                               ,save_weights_only=True

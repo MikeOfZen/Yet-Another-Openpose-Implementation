@@ -1,12 +1,11 @@
 import tensorflow as tf
-from tpu_training.TPU_config import *
 
 
 def connect_to_tpu(tpu_address):
     return tf.distribute.cluster_resolver.TPUClusterResolver(tpu=tpu_address)
 
 
-def init_tpu():
+def init_tpu(tpu_ip):
     print("Trying to connect to a TPU node")
 
     print(("\n!!!MAKE SURE THE TPU ADDRESS IS CORRECT!!\n"
@@ -16,7 +15,7 @@ def init_tpu():
            "4.tpu must be reachable (check with gce netowrking/connectivity test)\n"
            "if not this will hang!\n"), flush=True)
 
-    tpu_address = 'grpc://' + TPU_IP + ':8470'
+    tpu_address = 'grpc://' + tpu_ip + ':8470'
     print("Trying to connect to:", tpu_address, flush=True)
     resolver = connect_to_tpu(tpu_address)
 

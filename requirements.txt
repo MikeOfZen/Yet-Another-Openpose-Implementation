@@ -7,3 +7,4 @@ google-cloud-storage
 opencv-python
 cython
 pycocotools
+numba

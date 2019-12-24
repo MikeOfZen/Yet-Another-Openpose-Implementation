@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-import dataset_functions
+from training import dataset_functions
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 

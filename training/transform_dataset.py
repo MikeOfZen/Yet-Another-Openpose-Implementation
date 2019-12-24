@@ -258,8 +258,8 @@ def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, c
 
 
 if __name__ == "__main__":
-    import default_config as cfg
-    import local_storage_config as storage_cfg
+    from configs import default_config as cfg, local_storage_config as storage_cfg
+
     cfg.__dict__.update(storage_cfg.__dict__)
 
     coco_to_TFrecords(cfg.TRAIN_ANNS, cfg.TRAIN_TFRECORDS, cfg)

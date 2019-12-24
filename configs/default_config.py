@@ -1,6 +1,4 @@
-
-import numpy as np
-from keypoints_config import *
+from configs.keypoints_config import *
 
 TPU_MODE = False
 RUN_NAME = ""
