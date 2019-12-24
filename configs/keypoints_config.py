@@ -2,8 +2,7 @@ import collections
 
 DS_NUM_KEYPOINTS=17
 
-
-#our newly defined ketpoints
+# our newly defined keypoints
 #for mirror augmentaiton to work, the order of keypoitns,and joints must be center,right,left
 KEYPOINTS_DEF={
  'nose'         :{"idx":0   ,"name":'nose'         ,"side":"C"   ,"ds_idxs":0    ,"mirror_name":None       },
@@ -82,21 +81,3 @@ JOINTS_SIDES={"C":(0,0),"R":(1,8),"L":(9,16)} #the starting and ending indexes f
 #     ,15:   'Lankle'
 #     ,16:   'Rankle'
 # }
-
-# 0
-# 1
-# 2
-# 3
-# 4
-# 5
-# 6
-# 7
-# 8
-# 9
-# 10
-# 11
-# 12
-# 13
-# 14
-# 15
-# 16

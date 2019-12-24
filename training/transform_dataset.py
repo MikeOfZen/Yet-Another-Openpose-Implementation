@@ -7,7 +7,7 @@ from os import environ
 
 from pycocotools.coco import COCO
 
-if "DEBUG" in environ:  # useful for debugging imgs with scview
+if "DEBUG" in environ:  # useful for debugging imgs with sciview
     import matplotlib
 
     matplotlib.use('module://backend_interagg')
@@ -63,6 +63,7 @@ def middle_kpt(kpt1, kpt2):
 def reshape_kpts(keypoints: list, config) -> np.ndarray:
     """reshapes keypoints list into numpy array
     :param keypoints list of coco keypoints of  ...kpt x,kpt y,kpt visibility...
+    :param config the effective config
     :returns np.ndarray of shape (DS_NUM_KEYPOINTS,3)"""
     keypts_np = np.array(keypoints, dtype=np.float32)
     keypts_np = keypts_np.reshape((config.DS_NUM_KEYPOINTS, 3))
@@ -71,8 +72,8 @@ def reshape_kpts(keypoints: list, config) -> np.ndarray:
 
 def map_new_kpts(keypoints: np.ndarray, config) -> list:
     """Map from dataset keypoints to own definition of keypoints, defined in KEYPOINTS_DEF.
-     for example dataset has no neck keypoint,this map it by averging left and right shoulders
-     otherwise, it rearragnes kpts in a more sensible order"""
+     for example dataset has no neck keypoint,this map it by averaging left and right shoulders
+     otherwise, it rearranges kpts in a more sensible order"""
     new_keypts = []
     for kpt_name, kpt_def in config.KEYPOINTS_DEF.items():
         ds_idxs = kpt_def["ds_idxs"]
@@ -90,7 +91,7 @@ def map_new_kpts(keypoints: np.ndarray, config) -> list:
 
 def transform_keypts(keypoints, size: np.ndarray):
     """take the list form, numpyifies and forms to (number of persons,DS_NUM_KEYPOINTS,3) tensor,
-    also switches coords to match the rest of the system ie Y,X instad of X,Y"""
+    also switches coords to match the rest of the system ie Y,X instead of X,Y"""
 
     # keypts_np=np.array(keypts, dtype=np.float32)
     # keypts_np=keypts_np.reshape((-1,DS_NUM_KEYPOINTS,3)) #form the list into a correctly shaped tensor
@@ -144,7 +145,7 @@ class FileSharder:
         :param file_writer, is the class to use as a writer, must have .write()"""
         assert base_filename_format.format(0) != base_filename_format
 
-        self._filw_writer = file_writer
+        self._file_writer = file_writer
         self._base_filename_format = base_filename_format
         self._records_per_file = records_per_file
         self._example_counter = 0
@@ -158,7 +159,7 @@ class FileSharder:
     def _start_file(self):
         self._filename = self._base_filename_format.format(self._file_counter)
         if self._verbose: print("\nWriting file:" + self._filename, flush=True)
-        self._writer = self._filw_writer(self._filename)
+        self._writer = self._file_writer(self._filename)
 
     def _finish_file(self):
         self._writer.flush()
@@ -184,8 +185,8 @@ class FileSharder:
 
 def coco_to_TFrecords(keypoint_annotations_file, transformed_annotations_file, config):
     """This script transforms the COCO 2017 keypoint train,val files
-    into a format with all keypoints and joints for an image, in a more convinent format,
-    where the first axes is the bodypart or joint, the second is the object, and the third are the
+    into a format with all keypoints and joints for an image, in a more convenient format,
+    where the first axes is the body part or joint, the second is the object, and the third are the
     components (x,y,a) for keypoint and (x1,y1,x2,y2,a) for joint.
     The script saves it into matching pickle files.
     Meant to run once.

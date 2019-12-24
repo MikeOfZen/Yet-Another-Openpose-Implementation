@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-class DatasetTransformer():
+class DatasetTransformer:
     def __init__(self, config):
         self.INCLUDE_MASK = config.INCLUDE_MASK
         self.LABEL_HEIGHT = config.LABEL_HEIGHT
@@ -15,7 +15,7 @@ class DatasetTransformer():
         self.HEATMAP_NUM_FILTERS = config.HEATMAP_NUM_FILTERS
 
         self.JOINTS_DEF = config.JOINTS_DEF
-        self.JOINTS_SIDES= config.JOINTS_SIDES
+        self.JOINTS_SIDES = config.JOINTS_SIDES
         self.KEYPOINTS_SIDES = config.KEYPOINTS_SIDES
 
         self.CONTRAST_RANGE = config.CONTRAST_RANGE
@@ -37,7 +37,7 @@ class DatasetTransformer():
     def init_grid(self):
         y_grid = tf.linspace(0.0, 1.0, self.LABEL_HEIGHT)
         x_grid = tf.linspace(0.0, 1.0, self.LABEL_WIDTH)
-        yy, xx = tf.meshgrid(y_grid, x_grid, indexing='ij')  # indexing is a must, otherwise, it's just bizzare!
+        yy, xx = tf.meshgrid(y_grid, x_grid, indexing='ij')  # indexing is a must, otherwise, it's just bizarre!
         self.grid = tf.stack((yy, xx), axis=-1)
 
     @tf.function
@@ -85,7 +85,7 @@ class DatasetTransformer():
         raw = tf.exp((-(results.stack() ** 2) / self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ))
         result = tf.where(raw < 0.001, 0.0, raw)
 
-        result = tf.transpose(result, (1, 2, 0))  # must transpose to match the moel output
+        result = tf.transpose(result, (1, 2, 0))  # must transpose to match the model output
         result = tf.ensure_shape(result, ([self.LABEL_HEIGHT, self.LABEL_WIDTH, self.HEATMAP_NUM_FILTERS]))
         return result
 
@@ -103,8 +103,8 @@ class DatasetTransformer():
         raw = tf.exp((-(all_dists ** 2) / self.KPT_HEATMAP_GAUSSIAN_SIGMA_SQ))
         result = tf.where(raw < 0.001, 0.0, raw)
 
-        result = tf.transpose(result, (1, 2, 0))  # must transpose to match the moel output
-        result = tf.ensure_shape(result, ([self.LABEL_HEIGHT, self.LABEL_WIDTH, self.HEATMAP_NUM_FILTERS]), name="kpts_enusured_shape")
+        result = tf.transpose(result, (1, 2, 0))  # must transpose to match the model output
+        result = tf.ensure_shape(result, ([self.LABEL_HEIGHT, self.LABEL_WIDTH, self.HEATMAP_NUM_FILTERS]), name="kpts_ensured_shape")
         return result
 
     @tf.function
@@ -121,7 +121,7 @@ class DatasetTransformer():
         """This transforms a single keypoint into an array of the distances from the keypoint
         :param kpt must be tf.Tensor of shape (x,y,a) where a is either 0,1,2 for missing,invisible and visible"""
         if kpt[2] == tf.constant(0.0):
-            return tf.ones((self.LABEL_HEIGHT, self.LABEL_WIDTH), dtype=tf.float32)  # maximum distance incase of empty kpt, not ideal but meh
+            return tf.ones((self.LABEL_HEIGHT, self.LABEL_WIDTH), dtype=tf.float32)  # maximum distance in case of empty kpt, not ideal but meh
         else:
             ortho_dist = self.grid - kpt[0:2]
             return tf.linalg.norm(ortho_dist, axis=-1)
@@ -148,7 +148,7 @@ class DatasetTransformer():
         result_x = result[..., 1]
         result = tf.concat((result_y, result_x), axis=-1)
 
-        result = tf.ensure_shape(result, ([self.LABEL_HEIGHT, self.LABEL_WIDTH, self.PAF_NUM_FILTERS]), name="paf_enusured_shape")
+        result = tf.ensure_shape(result, ([self.LABEL_HEIGHT, self.LABEL_WIDTH, self.PAF_NUM_FILTERS]), name="paf_ensured_shape")
         return result
 
     @tf.function
@@ -166,7 +166,7 @@ class DatasetTransformer():
     def single_PAF(self, joint):
         """ Makes a single vector valued PAF (part affinity field) array
         *does not support batched input
-        :param joint a 1D tensor of (x1,y1,x2,y2,visability)
+        :param joint a 1D tensor of (x1,y1,x2,y2,visibility)
         :return a tensor of shape (LABEL_HEIGHT, LABEL_WIDTH, 2)
         """
         jpts = tf.reshape(joint[0:4], (2, 2))  # reshape to ((x1,y1),(x2,y2))
@@ -185,7 +185,7 @@ class DatasetTransformer():
             projections = tf.tensordot(vectors_from_begin, vector_hat, 1)  # get projection on the joint unit vector
             n_projections = tf.tensordot(vectors_from_begin, normal_vector, 1)  # get projection on the joint normal unit vector
 
-            dist_from_begin = tf.linalg.norm(vectors_from_begin, axis=-1)  # get distances from the begining, and end
+            dist_from_begin = tf.linalg.norm(vectors_from_begin, axis=-1)  # get distances from the beginning, and end
             dist_from_end = tf.linalg.norm(vectors_from_end, axis=-1)
 
             begin_gaussian_mag = tf.exp((-(dist_from_begin ** 2) / self.PAF_GAUSSIAN_SIGMA_SQ))  # compute gaussian bells
@@ -276,7 +276,7 @@ class DatasetTransformer():
         return new_elem
 
     @tf.function
-    def mirror_augmentation(self,elem):
+    def mirror_augmentation(self, elem):
         """Dataset operation, working on dict element,
         with a 0.5 chance, flips the image horizontally"""
         new_elem = {}
@@ -309,7 +309,7 @@ class DatasetTransformer():
                     , pafX_center
                     , pafX_left
                     , pafX_right
-                    ], axis=-1)  # this reconstitues the PAFS tensor with flipped labels, to match the image
+                    ], axis=-1)  # this reconstitutes the PAFS tensor with flipped labels, to match the image
             new_elem["pafs"] = pafs
 
             kpts_center = img_rotated_kpts[..., self.KEYPOINTS_SIDES["C"][0]:self.KEYPOINTS_SIDES["C"][1] + 1]
@@ -319,7 +319,7 @@ class DatasetTransformer():
                     kpts_center
                     , kpts_left
                     , kpts_right
-                    ], axis=-1)  # this reconstitues the KPTS tensor with flipped labels, to match the image
+                    ], axis=-1)  # this reconstitutes the KPTS tensor with flipped labels, to match the image
 
             new_elem["kpts"] = kpts
         return new_elem

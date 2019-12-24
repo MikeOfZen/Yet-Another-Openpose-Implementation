@@ -12,7 +12,7 @@ def init_tpu(tpu_ip):
            "1.ip must be correct\n"
            "2.tpu must be turned on\n"
            "3.version must be 'nightly-2.x'\n"
-           "4.tpu must be reachable (check with gce netowrking/connectivity test)\n"
+           "4.tpu must be reachable (check with gce networking/connectivity test)\n"
            "if not this will hang!\n"), flush=True)
 
     tpu_address = 'grpc://' + tpu_ip + ':8470'

@@ -11,37 +11,25 @@ HEIGHT = 46
 WIDTH = 46
 y_grid = tf.linspace(0.0, 1.0, HEIGHT)
 x_grid = tf.linspace(0.0, 1.0, WIDTH)
-yy, xx = tf.meshgrid(y_grid, x_grid, indexing='ij')  # indexing is a must, otherwise, it's just bizzare!
+yy, xx = tf.meshgrid(y_grid, x_grid, indexing='ij')  # indexing is a must, otherwise, it's just bizarre!
 grid = tf.stack((yy, xx), axis=-1)
 
 
 def keypoints_layer(kpts_layer, spot_size):
-    """This transforms a single layer of keypoints (such as 3 keypoints of type 'right shoulder')
-    the keypoint_distance creates an array of the distances from each keypoint
-    and this reduces them to a single array by the  of the distances.
-    :param kpts_layer must be a tf.Tensor of shape (n,3)"""
     layer_dists = tf.map_fn(keypoint_distance, kpts_layer)
     all_dists = tf.math.reduce_min(layer_dists, axis=0)
     raw = tf.exp((-(all_dists ** 2) / spot_size))
     return raw
 
-
 def keypoint_distance(kpt):
-    """This transforms a single keypoint into an array of the distances from the keypoint
-    :param kpt must be tf.Tensor of shape (x,y,a) where a is either 0,1,2 for missing,invisible and visible"""
     if kpt[2] == tf.constant(0.0):
-        return tf.ones((HEIGHT, WIDTH), dtype=tf.float32)  # maximum distance incase of empty kpt, not ideal but meh
+        return tf.ones((HEIGHT, WIDTH), dtype=tf.float32)  # maximum distance in case of empty kpt, not ideal but meh
     else:
         ortho_dist = grid - kpt[0:2]
         return tf.linalg.norm(ortho_dist, axis=-1)
 
 
 def layer_PAF(joints):
-    """ Makes a combined PAF for all joints of the same type
-    and reduces them to a single array by averaging the vectors out
-    *does not support batched input
-    :param joints must be a tf.Tensor of shape (n,5)
-    :return a tensor of shape (LABEL_HEIGHT, LABEL_WIDTH, 2)"""
     layer_PAFS = tf.map_fn(single_PAF, joints)
     combined = tf.math.reduce_sum(layer_PAFS, axis=0)  # averages the vectors out to combine the fields in case they intersect
     return combined
@@ -51,10 +39,6 @@ PAF_GAUSSIAN_SIGMA_SQ = 0.0015
 
 
 def single_PAF(joint):
-    """ Makes a single vector valued PAF (part affinity field) array
-    *does not support batched input
-    :return a tensor of shape (LABEL_HEIGHT, LABEL_WIDTH, 2)
-    """
     jpts = tf.reshape(joint[0:4], (2, 2))  # reshape to ((x1,y1),(x2,y2))
     if joint[4] == tf.constant(0.0) or tf.reduce_all(jpts[1] - jpts[0] == 0.0):
         return tf.zeros((HEIGHT, WIDTH, 2), dtype=tf.float32)  # in case of empty joint
@@ -71,7 +55,7 @@ def single_PAF(joint):
         projections = tf.tensordot(vectors_from_begin, vector_hat, 1)  # get projection on the joint unit vector
         n_projections = tf.tensordot(vectors_from_begin, normal_vector, 1)  # get projection on the joint normal unit vector
 
-        dist_from_begin = tf.linalg.norm(vectors_from_begin, axis=-1)  # get distances from the begining, and end
+        dist_from_begin = tf.linalg.norm(vectors_from_begin, axis=-1)  # get distances from the beginning, and end
         dist_from_end = tf.linalg.norm(vectors_from_end, axis=-1)
 
         begin_gaussian_mag = tf.exp((-(dist_from_begin ** 2) / PAF_GAUSSIAN_SIGMA_SQ))  # compute gaussian bells

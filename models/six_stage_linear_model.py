@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 class ModelMaker:
-    """Creates a model for the OpenPose project, structre is 10 layers of VGG16 followed by a few convultions, and 6 stages 
+    """Creates a model for the OpenPose project, structure is 10 layers of VGG16 followed by a few convolutions, and 6 stages
     of (PAF,PAF,PAF,PAF,kpts,kpts) also potentially includes a mask stacked with the outputs"""
 
     def __init__(self, config):
@@ -19,10 +19,9 @@ class ModelMaker:
         self.INPUT_SHAPE = (config.IMAGE_HEIGHT, config.IMAGE_WIDTH, 3)
         self.MASK_SHAPE = (config.LABEL_HEIGHT, config.LABEL_WIDTH, 1)
 
-
         self.stage_final_nfilters = 512
-        self.base_activation=tf.keras.layers.PReLU
-        self.base_activation_kwargs={'shared_axes':[1, 2]}
+        self.base_activation = tf.keras.layers.PReLU
+        self.base_activation_kwargs = {'shared_axes': [1, 2]}
 
         self._get_vgg_layer_config_weights()
 
@@ -52,27 +51,27 @@ class ModelMaker:
 
     def _make_stage0(self, x):
         x = tf.keras.layers.Conv2D(512, 1, padding="same", name="stage0_final_conv1")(x)
-        x = self.base_activation(**self.base_activation_kwargs,name="stage0_final_conv1_act")(x)
+        x = self.base_activation(**self.base_activation_kwargs, name="stage0_final_conv1_act")(x)
         x = tf.keras.layers.Conv2D(512, 1, padding="same", name="stage0_final_conv2")(x)
-        x = self.base_activation(**self.base_activation_kwargs,name="stage0_final_conv2_act")(x)
+        x = self.base_activation(**self.base_activation_kwargs, name="stage0_final_conv2_act")(x)
         x = tf.keras.layers.Conv2D(256, 1, padding="same", name="stage0_final_conv3")(x)
-        x = self.base_activation(**self.base_activation_kwargs,name="stage0_final_conv3_act")(x)
+        x = self.base_activation(**self.base_activation_kwargs, name="stage0_final_conv3_act")(x)
         x = tf.keras.layers.Conv2D(256, 1, padding="same", name="stage0_final_conv4")(x)
-        x = self.base_activation(**self.base_activation_kwargs,name="stage0_final_conv4_act")(x)
+        x = self.base_activation(**self.base_activation_kwargs, name="stage0_final_conv4_act")(x)
         return x
 
     def _make_conv_block(self, x0, conv_block_filters, name):
         if self.BATCH_NORMALIZATION_ON: x0 = tf.keras.layers.BatchNormalization(name=name + "_bn3")(x0)
         x1 = tf.keras.layers.Conv2D(conv_block_filters, 3, padding="same", name=name + "_conv1")(x0)
-        x1 = self.base_activation(**self.base_activation_kwargs,name=name + "_conv1_act")(x1)
+        x1 = self.base_activation(**self.base_activation_kwargs, name=name + "_conv1_act")(x1)
 
         if self.BATCH_NORMALIZATION_ON: x1 = tf.keras.layers.BatchNormalization(name=name + "_bn1")(x1)
         x2 = tf.keras.layers.Conv2D(conv_block_filters, 3, padding="same", name=name + "_conv2")(x1)
-        x2 = self.base_activation(**self.base_activation_kwargs,name=name + "_conv2_act")(x2)
+        x2 = self.base_activation(**self.base_activation_kwargs, name=name + "_conv2_act")(x2)
 
         if self.BATCH_NORMALIZATION_ON: x2 = tf.keras.layers.BatchNormalization(name=name + "_bn2")(x2)
         x3 = tf.keras.layers.Conv2D(conv_block_filters, 3, padding="same", name=name + "_conv3")(x2)
-        x3 = self.base_activation(**self.base_activation_kwargs,name=name + "_conv3_act")(x3)
+        x3 = self.base_activation(**self.base_activation_kwargs, name=name + "_conv3_act")(x3)
 
         output = tf.keras.layers.concatenate([x1, x2, x3], name=name + "_output")
         return output
@@ -94,8 +93,8 @@ class ModelMaker:
         x = self._make_conv_block(x, conv_block_filters, name + "_block5")
 
         x = tf.keras.layers.Conv2D(self.stage_final_nfilters, 1, padding="same", name=name + "_final1conv")(x)
-        x=self.base_activation(**self.base_activation_kwargs,name=name + "_final1conv_act")(x)
-        x = tf.keras.layers.Conv2D(outputs, 1, padding="same",activation=last_activation, name=name + "_final2conv")(x)
+        x = self.base_activation(**self.base_activation_kwargs, name=name + "_final1conv_act")(x)
+        x = tf.keras.layers.Conv2D(outputs, 1, padding="same", activation=last_activation, name=name + "_final2conv")(x)
 
         return x
 

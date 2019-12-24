@@ -1,20 +1,19 @@
 import sys
 
 sys.path.append("..")
-
 import numpy as np
 import numba
 import cv2
 
 
 @numba.njit
-def mark_islands(input) -> (np.ndarray, dict):
-    """This creates an array marking seperate truth islands in a truth array
-    :param input:2D array bool array
+def mark_islands(truth_islands) -> (np.ndarray, dict):
+    """This creates an array marking separate truth islands in a truth array
+    :param truth_islands:2D array bool array
     :return (islands array-of marked islands,island_hierarchy-islands connections dict)"""
-    assert len(input.shape) == 2, "Must be 2D array"
-    dim0 = input.shape[0]
-    dim1 = input.shape[1]
+    assert len(truth_islands.shape) == 2, "Must be 2D array"
+    dim0 = truth_islands.shape[0]
+    dim1 = truth_islands.shape[1]
     shape = (dim0 + 1, dim1 + 1)
     islands = np.zeros(shape, dtype=np.uint16)
     island_num = 1
@@ -22,14 +21,14 @@ def mark_islands(input) -> (np.ndarray, dict):
 
     for y in range(dim0):
         for x in range(dim1):
-            if input[y, x]:
+            if truth_islands[y, x]:
                 iy = y + 1  # to handle array edge case, islands idxs are shifter by one
                 ix = x + 1
                 above = islands[iy - 1, ix]
                 left = islands[iy, ix - 1]
                 if not above and not left:
                     islands[iy, ix] = island_num
-                    island_hierarchy[island_num] = island_num  # stays None if islands is isoalted, or gets changed to master islands later
+                    island_hierarchy[island_num] = island_num  # stays None if islands is isolated, or gets changed to master islands later
                     island_num += 1
                 elif above and not left:
                     islands[iy, ix] = above
@@ -63,9 +62,9 @@ def islands_max(heatmap, islands, island_hierarchy):
     dim1 = islands.shape[1]
 
     # islands_max=np.zeros(LIMIT_NUM_ISLANDS, dtype=np.float32)-1
-    islands_max = numba.typed.Dict.empty(key_type=numba.types.uint16, value_type=numba.types.float32)
+    islands_max_dict = numba.typed.Dict.empty(key_type=numba.types.uint16, value_type=numba.types.float32)
     for island_num in set(island_hierarchy.values()):
-        islands_max[island_num] = 0  # init here, because thats the only way
+        islands_max_dict[island_num] = 0  # init here, because that's the only way
 
     peaks = {}
     for y in range(dim0):
@@ -73,8 +72,8 @@ def islands_max(heatmap, islands, island_hierarchy):
             if islands[y, x]:
                 island_num = islands[y, x]
                 top_island_num = island_hierarchy[island_num]
-                if heatmap[y, x] > islands_max[top_island_num]:  #
-                    islands_max[top_island_num] = heatmap[y, x]
+                if heatmap[y, x] > islands_max_dict[top_island_num]:  #
+                    islands_max_dict[top_island_num] = heatmap[y, x]
                     peaks[top_island_num] = (y, x)
 
     # translate to list view and remove island numbers
@@ -82,7 +81,7 @@ def islands_max(heatmap, islands, island_hierarchy):
     islands_max_l = []
     for k in peaks:
         peaks_l.append(peaks[k])
-        islands_max_l.append(islands_max[k])
+        islands_max_l.append(islands_max_dict[k])
 
     return peaks_l, islands_max_l
 
@@ -159,7 +158,7 @@ class LineVectorIntegral:
         """Integrates the y,x fields in a straight line from the start coords to the end coords
         :param start: 2-tuple of uint, line start coords, must be within defined field limits
         :param end: 2-tuple of uint, line end coords, must be within defined field limits
-        :return 2-tuple of intgeral sum of the line on the x and y fields"""
+        :return 2-tuple of integral sum of the line on the x and y fields"""
         y0 = start[0]
         x0 = start[1]
         y1 = end[0]
@@ -221,8 +220,8 @@ class Skeletonizer:
         self.pafs = pafs
 
     def _localize_potential_kpts(self):
-        """This converts the trained model outut keypoints heatmaps tensor to coordinates of ptoential keypoint
-        coordinates. find_peaks thersholds the input, segementing the input into islands of certainty
+        """This converts the trained model output keypoints heatmaps tensor to coordinates of potential keypoint
+        coordinates. find_peaks thresholds the input, segmenting the input into islands of certainty
         and for each island finds the max coords.
         for each keypoint type (from KEYPOINT_DEF) it stores all hits
         :returns a dict of kpts vs their locations"""
@@ -236,7 +235,7 @@ class Skeletonizer:
 
     def _create_joints(self, potential_kpts: dict):
         """Creates the best joints from the potential kpts by using the paf vector fields
-        all possible joints are scored by alignement with the paf field.
+        all possible joints are scored by alignment with the paf field.
         and then only the best joint matching (bipartite matching) is created according to max alignment score
         and by limiting joints to a 1-to-1 start kpt to end kpt joints
         :param potential_kpts dict of discovered kpts and their coordinates in the processed image
@@ -287,7 +286,7 @@ class Skeletonizer:
         matched_end_kpts = []
         count = 0
         matched_joints = []
-        for alignement, start_kpt, end_kpt in sorted_candidates:
+        for alignment, start_kpt, end_kpt in sorted_candidates:
 
             if start_kpt not in matched_start_kpts and end_kpt not in matched_end_kpts:  # only match those joints
                 # for which no endpoint is already in another joint
@@ -301,7 +300,7 @@ class Skeletonizer:
         return matched_joints
 
     def _build_skeletons(self, joint_lists):
-        """Builds the complete skeletons from the disconnected joints, by matching endpoints and coordiantes between the joints"""
+        """Builds the complete skeletons from the disconnected joints, by matching endpoints and coordinates between the joints"""
         skeletons = []
         for joint_name, joints_coords in joint_lists.items():
             start_kpt_name = self.JOINTS_DEF[joint_name]["kpts"][0]

@@ -1,7 +1,5 @@
-#%% raw
-
 Dataset side
-* add apropirate settings for TFRecordDataset -V
+* add appropriate settings for TFRecordDataset -V
 * cache (before transformations) just to avoid disk access (should be ~9gigs) -V
 * move cache to ramfs -V
 * add augmentation ,after cache, probably before transformations
@@ -18,7 +16,7 @@ Compilation side
 
 * add hyper parameters (learning rate, learning rate decay)
 * Figure out metrics (accuracy)
-    *add recall ,mean absoulte error, and 'island' recall error -V
+    *add recall ,mean absolute error, and 'island' recall error -V
     *sort metrics by stage -V
 * add validation -V
 
@@ -37,13 +35,13 @@ Dangling layers
 
 Results
 *caching seems to eat only gpu memory
-*Intersting to try a ramfs or a BytesIO object , (ramfs is probably better though as tf handles the interface)
+*Interesting to try a ramfs or a BytesIO object , (ramfs is probably better though as tf handles the interface)
 *This should allow to increase batch size
--Full epoc currently is 1:15h
+-Full epoch currently is 1:15h
 TPUs
 -After figuring out TPUs, 13min epoch is achieved!
 
--execution adjustments, batch siez, caching.
+-execution adjustments, batch size, caching.
 -
 
 Need to figure out what's going on with the PAF stages, all losses seem the same.
@@ -58,8 +56,8 @@ observations
 *when the gradients explode, the PAF stages losses are very different:
 loss: 6034892169562175.0000 - stage1paf_output_loss: 2.7209 - stage2paf_output_loss: 3066.9797 - stage3paf_output_loss: 1367401.7500 - stage4paf_output_loss: 648865408.0000
 
-explosing gradients seem to have something with reloading checkpoints.
-if true I should open an issue, on econd look it might just be the learning rate.
+exploding gradients seem to have something with reloading checkpoints.
+if true I should open an issue, on second look it might just be the learning rate.
 
 Learning rate
 0.0001 works fine
@@ -68,10 +66,10 @@ Learning rate
 
 
 After training, the PAF stages dont seem to train at all. the converge to a zero minima.\n",
-to solve the issue two solutions are implmented.\n",
+to solve the issue two solutions are implemented.\n",
 1.Implement the masking feature in the loss function, for the data in COCO dataset\n",
 2.Instead of using the paper's approach of hard areas for the PAFs, using a gaussian distribution for the lengths of the joints.\n",
-3.Adding a start and end gaussian distrubtion to the joint vectors (the beginning and end of the joints), this should improve handling of smaller joints like nose-eye and eye-ear.\n",
+3.Adding a start and end gaussian distribution to the joint vectors (the beginning and end of the joints), this should improve handling of smaller joints like nose-eye and eye-ear.\n",
 4.Adding a neck kpt and changing the nose connection to this point. this reflection of anatomy should work better."
 
 
@@ -86,7 +84,7 @@ loss is NaN after 5 batch (128) training.
 -fixed, problem was zero length joints
 
 added augmentation
--image augmentation (might redundent)
+-image augmentation (might redundant)
 -mirror augmentation
 
 added dropout to model
@@ -96,7 +94,7 @@ dropout was 0.2
 
 -"Full_model_2_2augs_dp01" lowering dropout to 0.1 should improve things. (continuing training from previous spot)
 
-completly overhauled the kpts and joints order and indexation scheme. , now they are in center,right,left order.
+completely overhauled the kpts and joints order and indexation scheme. , now they are in center,right,left order.
 
 with dropout and batch norm, it seems the training is zero or extremely slow.
 disabled for now, running model 8 with augmentations, we'll let it run its course (30 epochs)
