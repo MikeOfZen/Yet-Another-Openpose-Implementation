@@ -4,9 +4,16 @@ TPU_MODE = False
 RUN_NAME = ""
 # Training Mode
 INCLUDE_MASK = True
+<<<<<<< Updated upstream:configs/default_config.py
 ASK_FOR_CHECKPOINTS = False
 SAVE_CHECKPOINTS = True
 SAVE_TENSORBOARD = True
+=======
+ASK_FOR_CHECKPOINTS = True
+SAVE_CHECKPOINTS=True
+SAVE_TENSORBOARD=True
+
+>>>>>>> Stashed changes:default_config.py
 
 # this determines the size images will be resized to, and the size of the labels created
 IMAGE_WIDTH = 368
@@ -28,8 +35,13 @@ KPT_HEATMAP_GAUSSIAN_SIGMA_SQ = 0.008  # used for the size of the gaussian spot 
 PAF_GAUSSIAN_SIGMA_SQ = 0.0015  # similar to joint width, but works on gaussian width, tradeoff between model certainty and number of persons that can be discriminated in a frame
 
 # dataset settings
+<<<<<<< Updated upstream:configs/default_config.py
 SHUFFLE = True
 SHUFFLE_BUFFER = 1000
+=======
+SHUFFLE = False
+SHUFFLE_BUFFER=1000
+>>>>>>> Stashed changes:default_config.py
 PREFETCH = 10  # size of prefetch size, 0 to disable
 CACHE = False  # depends on available memory size, around 20gb required for both cache and graph
 
@@ -39,7 +51,7 @@ DATASET_VAL_SIZE = 2500
 
 IMAGES_PER_TFRECORD = 1000
 
-BATCH_SIZE = 2  # for use when on cpu for development, if on GPU, can safely increase
+BATCH_SIZE = 1  # for use when on cpu for development, if on GPU, can safely increase
 
 # Augmentation settings
 IMAGE_AUG = True
