@@ -5,10 +5,13 @@ RUN_NAME = ""
 # Training Mode
 INCLUDE_MASK = True
 <<<<<<< Updated upstream:configs/default_config.py
+<<<<<<< Updated upstream:configs/default_config.py
 ASK_FOR_CHECKPOINTS = False
 SAVE_CHECKPOINTS = True
 SAVE_TENSORBOARD = True
 =======
+=======
+>>>>>>> Stashed changes:default_config.py
 ASK_FOR_CHECKPOINTS = True
 SAVE_CHECKPOINTS=True
 SAVE_TENSORBOARD=True
@@ -36,9 +39,12 @@ PAF_GAUSSIAN_SIGMA_SQ = 0.0015  # similar to joint width, but works on gaussian 
 
 # dataset settings
 <<<<<<< Updated upstream:configs/default_config.py
+<<<<<<< Updated upstream:configs/default_config.py
 SHUFFLE = True
 SHUFFLE_BUFFER = 1000
 =======
+=======
+>>>>>>> Stashed changes:default_config.py
 SHUFFLE = False
 SHUFFLE_BUFFER=1000
 >>>>>>> Stashed changes:default_config.py
