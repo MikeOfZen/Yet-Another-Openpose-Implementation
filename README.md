@@ -3,7 +3,7 @@ Yet Another Openpose Implementation
 The Openpose algorithm processes an image with a deep CNN and extracts a skeleton representation of the pose of multiple people from it
 
 This project reimplemented from scratch the [OpenPose paper](https://arxiv.org/abs/1812.08008) [1], Using Tensorflow 2.1 
-and optional TPU powered training.
+and TPU powered training (optional).
 
 Sample result:<br>
 ![Video result](doc/YAOP_gif_smallres.gif)
