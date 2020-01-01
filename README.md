@@ -15,6 +15,7 @@ The default dataset used for training is the [COCO 2017 keypoints dataset](http:
 * For the web-cam demo launch `applications/cam.py`
 * For video annotation launch `applications/video.py [input_video_filepath] [output_video_filepath] --fourcc [installed codec fourcc, for example XVID] --fps [the input video frame rate]` 
 
+---
 ### Training setup
 It's possible to train locally with a strong gpu (an epoch time of a few hours) in which case no TPU setup is required, or setup a google cloud
 tpu account and train on a TPU (an epoch time of ~15min, on a v2-8 instance).
@@ -53,14 +54,14 @@ If training locally, this applies to the local machine, if using TPU, to the con
 8. Check `Train.ipynb` settings and run the training.
 9. Run and access Tensorboard to track the training progress
 10. When happy with the results, copy over the trained model to the local machine, and update the demo apps with the new model.
- 
+---
 
 ##### Dependencies
 `Python 3.5+`
 And everything in `requirements.txt` <br>
 *`pycocotools` for windows can be installed by:
 `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
-
+---
 ### References
 [1]  Zhe Cao, Gines Hidalgo, Tomas Simon, Shih-En Wei, and Yaser Sheikh, Openpose: Realtime
 multi-person 2d pose estimation using part affinity fields, 2018.
