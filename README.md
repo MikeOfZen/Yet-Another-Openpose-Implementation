@@ -30,7 +30,7 @@ tpu account and train on a TPU (an epoch time of ~15min, on a v2-8 instance).
 6. On the VM install `gcsfuse` (`dataset/install_gcsfuse.sh`)
 7. Setup Jupyter on the control VM to be accessible remotely
 
-####Training 
+#### Training 
 If training locally, this applies to the local machine, if using TPU, to the control VM.
 ##### local Training
 1. Checkout this repo<br> 
@@ -61,6 +61,6 @@ And everything in `requirements.txt` <br>
 *`pycocotools` for windows can be installed by:
 `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
 
-###References
+### References
 [1]  Zhe Cao, Gines Hidalgo, Tomas Simon, Shih-En Wei, and Yaser Sheikh, Openpose: Realtime
 multi-person 2d pose estimation using part affinity fields, 2018.
