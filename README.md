@@ -58,8 +58,8 @@ If training locally, this applies to the local machine, if using TPU, to the con
 ---
 
 ##### Dependencies
-`Python 3.5+`
-And everything in `requirements.txt` <br>
+
+`Python 3.5+` And everything in `requirements.txt` <br>
 *`pycocotools` for windows can be installed by:
 `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
 ---
