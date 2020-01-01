@@ -5,7 +5,7 @@ The Openpose algorithm process an input image with a deep CNN and extracts a ske
 This project reimplemented from scratch the OpenPose paper [1], Using Tensorflow 2.1 
 and optional TPU powered training.
 
-Sample result:
+Sample result:<br>
 ![Video result](doc/YAOP_gif_smallres.gif)
 
 The default dataset used for training is the [COCO 2017 keypoints dataset](http://cocodataset.org/) 
