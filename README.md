@@ -11,6 +11,7 @@ Sample result:<br>
 The default dataset used for training is the [COCO 2017 keypoints dataset](http://cocodataset.org/) 
 
 ### Demo applications usage
+The repo contains a trained model, and the applications are for demonstration purposes.
 * Install all dependencies.
 * For the web-cam demo launch `applications/cam.py`
 * For video annotation launch `applications/video.py [input_video_filepath] [output_video_filepath] --fourcc [installed codec fourcc, for example XVID] --fps [the input video frame rate]` 
