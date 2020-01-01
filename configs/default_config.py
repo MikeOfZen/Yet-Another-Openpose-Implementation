@@ -17,8 +17,8 @@ LABEL_HEIGHT = 46  # this stems from the model label output size, cannot be conf
 LABEL_WIDTH = 46  # same
 
 # model settings
-PAF_NUM_FILTERS = len(JOINTS_DEF) * 2
-HEATMAP_NUM_FILTERS = len(KEYPOINTS_DEF)
+PAF_NUM_FILTERS = len(JOINTS_DEF) * 2  # dont change
+HEATMAP_NUM_FILTERS = len(KEYPOINTS_DEF)  # dont change
 BATCH_NORMALIZATION_ON = False
 DROPOUT_RATE = 0  # set to 0 to disable
 
