@@ -138,6 +138,13 @@ class TestSkeletonizer(unittest.TestCase):
         post.Skeletonizer.config(kc.KEYPOINTS_DEF, kc.JOINTS_DEF, pc)
         post.Skeleton.config(kc.KEYPOINTS_DEF, kc.JOINTS_DEF)
 
+    def test_create_skeletons(self):
+        d = pickle.load(open("test_case1", "rb"))
+        self.kpts = d["kpts"]
+        self.pafs = d["pafs"]
+        self.sk = post.Skeletonizer(self.kpts, self.pafs)
+        self.sk.create_skeletons()
+
     def test__create_joints1(self):
         d = pickle.load(open("test_case1", "rb"))
         self.kpts = d["kpts"]

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.colors
-
+import cv2
 
 def to_3_channels(one_channel, channel=0):
     def rotate(l, x):
@@ -96,3 +96,36 @@ def plot_fields(*fields, colorbars=False):
         plt.subplot(rows, cols, i + 1)
         plt.imshow(field)
         if colorbars: plt.colorbar()
+
+
+class SkeletonDrawer:
+    def __init__(self, img, draw_config):
+        self.img = img
+        self.dc = draw_config
+
+    def _scale_flip_coord(self, coord):
+        y = coord[0]
+        x = coord[1]
+        scaled_y = int(y * self.img.shape[0])
+        scaled_x = int(x * self.img.shape[1])
+        return scaled_x, scaled_y
+
+    def joint_draw(self, start_coord, end_coord, joint_name):
+        start_coord = self._scale_flip_coord(start_coord)
+        end_coord = self._scale_flip_coord(end_coord)
+
+        color = self.dc.joint_colors_bgr[joint_name]
+        cv2.line(self.img, start_coord, end_coord, color, self.dc.joint_line_thickness, lineType=cv2.LINE_AA)
+
+    def kpt_draw(self, kpt_coord, kpt_name):
+        kpt_coord = self._scale_flip_coord(kpt_coord)
+
+        cv2.circle(self.img, kpt_coord, self.dc.keypoint_circle_diameter, self.dc.keypoint_circle_color)
+        if self.dc.DRAW_KEYPOINT_TEXT:
+            cv2.putText(img=self.img
+                        , text=kpt_name
+                        , org=kpt_coord
+                        , fontFace=cv2.FONT_HERSHEY_SIMPLEX
+                        , fontScale=self.dc.keypoint_text_scale
+                        , thickness=self.dc.keypoint_text_thickness
+                        , color=self.dc.keypoint_text_color)

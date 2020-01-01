@@ -219,6 +219,9 @@ class Skeletonizer:
         self.kpts = kpts
         self.pafs = pafs
 
+        self.LABEL_HEIGHT_RANGE = self.kpts.shape[0] - 1
+        self.LABEL_WIDTH_RANGE = self.kpts.shape[1] - 1
+
     def _localize_potential_kpts(self):
         """This converts the trained model output keypoints heatmaps tensor to coordinates of potential keypoint
         coordinates. find_peaks thresholds the input, segmenting the input into islands of certainty
@@ -316,12 +319,30 @@ class Skeletonizer:
                     skeletons.append(new_sk)
         return skeletons
 
+    def _normalize_joint_coords(self, joint_lists):
+        """for all coordinates in joint_lists, scale the coord to 0..1 range"""
+        normalized_joint_lists = {}
+        for joint_name, joints_coords in joint_lists.items():
+            normalized_joints_coords = []
+            for start_coord, end_coord in joints_coords:
+                normalized_start_coord = self._normalize_coord(start_coord)
+                normalized_end_coord = self._normalize_coord(end_coord)
+                normalized_joints_coords.append((normalized_start_coord, normalized_end_coord))
+            normalized_joint_lists[joint_name] = normalized_joints_coords
+        return normalized_joint_lists
+
+    def _normalize_coord(self, coord):
+        normalized_y = coord[0] / self.LABEL_HEIGHT_RANGE
+        normalized_x = coord[1] / self.LABEL_WIDTH_RANGE
+        return (normalized_y, normalized_x)
+
     def create_skeletons(self):
         """Creates skeletons from the kpts and pafs tensors
         :return list of Skeleton"""
         potential_kpts = self._localize_potential_kpts()
         joint_lists = self._create_joints(potential_kpts)
-        skeletons = self._build_skeletons(joint_lists)
+        normalized_joint_list = self._normalize_joint_coords(joint_lists)
+        skeletons = self._build_skeletons(normalized_joint_list)
         return skeletons
 
 
@@ -353,7 +374,15 @@ class Skeleton:
             return True
         return False
 
-    def draw_skeleton(self, img):
-        for joint_name, ((y0, x0), (y1, x1)) in self.joints.items():
-            cv2.line(img, (x0, y0), (x1, y1), (0, 255, 0), 1, lineType=cv2.LINE_AA)
-        return img
+    def draw_skeleton(self, joint_draw, kpt_draw):
+        """Uses the joint_draw and kpt_draw callables to draw the skeleton
+         :param joint_draw: callable with parameters (start_coord,end_coord,joint_name)
+         start_coord and end_coord are 2-tuple
+         joint_name is str of the joint
+         :param kpt_draw: callable with parameters (kpt_coord,kpt_name)
+         where kpt_coord is a 2-tuple of keypoint coordinates
+         and kpt_name is the keypoint name"""
+        for joint_name, (start_coord, end_coord) in self.joints.items():
+            joint_draw(start_coord, end_coord, joint_name)
+        for kpt_name, kpt_coord in self.keypoints.items():
+            kpt_draw(kpt_coord, kpt_name)
