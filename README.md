@@ -40,6 +40,7 @@ If training locally, this applies to the local machine, if using TPU, to the con
 *if able to use tensorflow-gpu, install it <br> 
 3. Download the dataset using `dataset/get_data` (.sh or .bat) (run from its own working dir)
 4. Run `training/transform_dataset.py` (from it's wdir), this creates the TFrecord files used in training<br>
+7. Update `configs/local_storage_config`
 5. Run `training/Train.ipynb` using Jupyter
 9. Run and access Tensorboard to track the training progress
 10. When happy with the results, update the demo apps with the new model.
@@ -51,6 +52,7 @@ If training locally, this applies to the local machine, if using TPU, to the con
 4. Mount the GCS bucket using `dataset/mount_bucket.sh`
 5. Run `training/transform_dataset.py` (from it's wdir), this creates the TFrecord files used in training<br>
 6. From within GCS verify the TFrecord files are in place
+7. Update `configs/remote_storage_config`
 7. Open `training/Train.ipynb` from Jupyter
 8. Check `Train.ipynb` settings and run the training.
 9. Run and access Tensorboard to track the training progress
