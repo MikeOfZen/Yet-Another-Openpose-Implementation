@@ -66,6 +66,11 @@ If training locally, this applies to the local machine, if using TPU, to the con
 `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
 
 ---
+##### Training data
+Full training data from last rounds of training is available at:
+https://console.cloud.google.com/storage/browser/dl_training_results
+
+---
 ### References
 [1]  Zhe Cao, Gines Hidalgo, Tomas Simon, Shih-En Wei, and Yaser Sheikh, Openpose: Realtime
 multi-person 2d pose estimation using part affinity fields, 2018.
